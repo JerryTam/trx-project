@@ -9,12 +9,13 @@ import (
 )
 
 type Config struct {
-	Server   ServerConfig   `yaml:"server"`
-	Database DatabaseConfig `yaml:"database"`
-	Redis    RedisConfig    `yaml:"redis"`
-	Kafka    KafkaConfig    `yaml:"kafka"`
-	Logger   LoggerConfig   `yaml:"logger"`
-	JWT      JWTConfig      `yaml:"jwt"`
+	Server    ServerConfig    `yaml:"server"`
+	Database  DatabaseConfig  `yaml:"database"`
+	Redis     RedisConfig     `yaml:"redis"`
+	Kafka     KafkaConfig     `yaml:"kafka"`
+	Logger    LoggerConfig    `yaml:"logger"`
+	JWT       JWTConfig       `yaml:"jwt"`
+	RateLimit RateLimitConfig `yaml:"rate_limit"`
 }
 
 type ServerConfig struct {
@@ -67,6 +68,14 @@ type JWTConfig struct {
 	Issuer           string `yaml:"issuer"`
 	ExpireHours      int    `yaml:"expire_hours"`       // 用户 Token 过期时间（小时）
 	AdminExpireHours int    `yaml:"admin_expire_hours"` // 管理员 Token 过期时间（小时）
+}
+
+// RateLimitConfig 限流配置
+type RateLimitConfig struct {
+	Enabled    bool   `yaml:"enabled"`     // 是否启用限流
+	GlobalRate string `yaml:"global_rate"` // 全局限流：例如 "1000-S" (每秒1000个请求)
+	IPRate     string `yaml:"ip_rate"`     // IP限流：例如 "100-M" (每分钟100个请求)
+	UserRate   string `yaml:"user_rate"`   // 用户限流：例如 "1000-M" (每分钟1000个请求)
 }
 
 // Load 根据环境加载配置文件

@@ -3,8 +3,10 @@ package router
 import (
 	"trx-project/internal/api/handler"
 	"trx-project/internal/api/middleware"
+	"trx-project/pkg/config"
 
 	"github.com/gin-gonic/gin"
+	"github.com/redis/go-redis/v9"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
 	"go.uber.org/zap"
@@ -14,6 +16,8 @@ import (
 func SetupFrontend(
 	userHandler *handler.UserHandler,
 	jwtSecret string,
+	redisClient *redis.Client,
+	cfg *config.Config,
 	logger *zap.Logger,
 	mode string,
 ) *gin.Engine {
@@ -26,6 +30,24 @@ func SetupFrontend(
 	r.Use(middleware.Recovery(logger))
 	r.Use(middleware.Logger(logger))
 	r.Use(middleware.CORS())
+
+	// 限流中间件
+	if cfg.RateLimit.Enabled {
+		logger.Info("Rate limiting enabled",
+			zap.String("global_rate", cfg.RateLimit.GlobalRate),
+			zap.String("ip_rate", cfg.RateLimit.IPRate),
+			zap.String("user_rate", cfg.RateLimit.UserRate))
+
+		rateLimiter := middleware.NewRateLimiter(redisClient, logger)
+
+		// 应用全局限流和 IP 限流
+		if cfg.RateLimit.GlobalRate != "" {
+			r.Use(rateLimiter.GlobalRateLimit(cfg.RateLimit.GlobalRate))
+		}
+		if cfg.RateLimit.IPRate != "" {
+			r.Use(rateLimiter.IPRateLimit(cfg.RateLimit.IPRate))
+		}
+	}
 
 	// Health check
 	r.GET("/health", func(c *gin.Context) {
@@ -51,6 +73,11 @@ func SetupFrontend(
 		// 用户接口（需要用户认证）
 		user := v1.Group("/user")
 		user.Use(middleware.Auth(jwtSecret, logger))
+		// 用户级别限流（需要在认证中间件之后）
+		if cfg.RateLimit.Enabled && cfg.RateLimit.UserRate != "" {
+			rateLimiter := middleware.NewRateLimiter(redisClient, logger)
+			user.Use(rateLimiter.UserRateLimit(cfg.RateLimit.UserRate))
+		}
 		{
 			user.GET("/profile", userHandler.GetProfile)
 			user.PUT("/profile", userHandler.UpdateProfile)
@@ -64,6 +91,11 @@ func SetupFrontend(
 			// 以下接口需要认证
 			usersAuth := users.Group("")
 			usersAuth.Use(middleware.Auth(jwtSecret, logger))
+			// 用户级别限流
+			if cfg.RateLimit.Enabled && cfg.RateLimit.UserRate != "" {
+				rateLimiter := middleware.NewRateLimiter(redisClient, logger)
+				usersAuth.Use(rateLimiter.UserRateLimit(cfg.RateLimit.UserRate))
+			}
 			{
 				usersAuth.GET("", userHandler.ListUsers)
 				usersAuth.GET("/:id", userHandler.GetUser)

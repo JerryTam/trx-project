@@ -176,6 +176,64 @@ eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 | 用户 Token | `user` | 7天 | 前台用户认证 |
 | 管理员 Token | `admin` / `superadmin` | 1天 | 后台管理认证 |
 
+## 🚦 限流功能
+
+### 限流策略
+
+项目实现了完整的三层限流保护：
+
+| 限流类型 | 作用范围 | 默认配置 | 说明 |
+|---------|---------|----------|------|
+| **全局限流** | 所有请求 | 1000/秒 | 保护整体服务 |
+| **IP 限流** | 按客户端 IP | 100/分钟 | 防止单个 IP 滥用 |
+| **用户限流** | 按认证用户 | 1000/分钟 | 精细化用户控制 |
+
+### 配置限流
+
+编辑配置文件 `config/config.yaml`:
+
+```yaml
+rate_limit:
+  enabled: true           # 启用/禁用限流
+  global_rate: "1000-S"   # 全局：每秒1000个请求
+  ip_rate: "100-M"        # IP：每IP每分钟100个请求
+  user_rate: "1000-M"     # 用户：每用户每分钟1000个请求
+```
+
+### 限流响应
+
+当请求被限流时，会返回 **HTTP 429** 状态码：
+
+```json
+{
+  "code": 429,
+  "message": "IP 请求限流（192.168.1.100），请 45 秒后重试",
+  "data": null
+}
+```
+
+每个响应都包含限流信息头：
+
+```http
+X-RateLimit-Limit: 100        # 限流上限
+X-RateLimit-Remaining: 95     # 剩余请求数
+X-RateLimit-Reset: 45         # 重置时间（秒）
+```
+
+### 测试限流
+
+```bash
+# 运行限流测试脚本
+./scripts/test_rate_limit.sh
+
+# 手动测试 IP 限流
+for i in {1..150}; do
+  curl http://localhost:8080/health
+done
+```
+
+📖 **详细文档**: [限流使用指南](RATE_LIMIT_GUIDE.md)
+
 ## 📡 API 接口
 
 ### 前台服务 (Port 8080)

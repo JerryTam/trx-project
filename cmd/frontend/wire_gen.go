@@ -43,7 +43,7 @@ func initFrontendApp(cfg *config.Config) (*gin.Engine, func(), error) {
 	jwtConfig := provideJWTConfig(cfg)
 	userService := service.NewUserService(userRepository, client, logger, jwtConfig)
 	userHandler := handler.NewUserHandler(userService, logger)
-	engine := provideFrontendRouter(userHandler, logger, cfg)
+	engine := provideFrontendRouter(userHandler, client, logger, cfg)
 	return engine, func() {
 	}, nil
 }
@@ -87,8 +87,14 @@ func provideJWTConfig(cfg *config.Config) jwt.Config {
 }
 
 func provideFrontendRouter(
-	userHandler *handler.UserHandler, logger2 *zap.Logger,
+	userHandler *handler.UserHandler,
+	redisClient *redis.Client, logger2 *zap.Logger,
 	cfg *config.Config,
 ) *gin.Engine {
-	return router.SetupFrontend(userHandler, cfg.JWT.Secret, logger2, cfg.Server.Mode)
+	return router.SetupFrontend(
+		userHandler,
+		cfg.JWT.Secret,
+		redisClient,
+		cfg, logger2, cfg.Server.Mode,
+	)
 }

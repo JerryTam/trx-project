@@ -87,9 +87,19 @@ func provideBackendRouter(
 	adminUserHandler *handler.AdminUserHandler,
 	rbacHandler *handler.RBACHandler,
 	rbacService service.RBACService,
+	redisClient *redis.Client,
 	logger *zap.Logger,
 	cfg *config.Config,
 ) *gin.Engine {
-	return router.SetupBackend(adminUserHandler, rbacHandler, rbacService, cfg.JWT.Secret, logger, cfg.Server.Mode)
+	return router.SetupBackend(
+		adminUserHandler,
+		rbacHandler,
+		rbacService,
+		cfg.JWT.Secret,
+		redisClient,
+		cfg,
+		logger,
+		cfg.Server.Mode,
+	)
 }
 

@@ -90,9 +90,17 @@ func provideJWTConfig(cfg *config.Config) jwt.Config {
 
 func provideFrontendRouter(
 	userHandler *handler.UserHandler,
+	redisClient *redis.Client,
 	logger *zap.Logger,
 	cfg *config.Config,
 ) *gin.Engine {
-	return router.SetupFrontend(userHandler, cfg.JWT.Secret, logger, cfg.Server.Mode)
+	return router.SetupFrontend(
+		userHandler,
+		cfg.JWT.Secret,
+		redisClient,
+		cfg,
+		logger,
+		cfg.Server.Mode,
+	)
 }
 

@@ -49,3 +49,10 @@ jwt:
   expire_hours: 168 # 7天
   admin_expire_hours: 12 # 12小时
 
+# 限流配置 (生产环境 - 严格限制)
+rate_limit:
+  enabled: true
+  global_rate: "1000-S"    # 全局限流：每秒1000个请求
+  ip_rate: "60-M"          # IP限流：每IP每分钟60个请求
+  user_rate: "500-M"       # 用户限流：每用户每分钟500个请求
+
