@@ -1,0 +1,68 @@
+==============================================
+API 路由列表 - 前后台接口分离
+==============================================
+
+健康检查
+  GET  /health
+
+前台接口
+─────────────────────────────────────────────
+公开接口（无需认证）
+  POST /api/v1/public/register           用户注册
+  POST /api/v1/public/login              用户登录
+
+用户接口（需要用户认证 - 暂未启用）
+  GET  /api/v1/user/profile              获取个人信息
+  PUT  /api/v1/user/profile              更新个人信息
+
+兼容旧接口（临时保留）
+  POST /api/v1/users/register            用户注册
+  POST /api/v1/users/login               用户登录
+  GET  /api/v1/users                     用户列表
+  GET  /api/v1/users/:id                 获取用户
+  DELETE /api/v1/users/:id               删除用户
+
+后台接口（需要管理员认证）
+─────────────────────────────────────────────
+用户管理
+  GET  /api/v1/admin/users               用户列表（分页、筛选）
+  GET  /api/v1/admin/users/:id           用户详情
+  PUT  /api/v1/admin/users/:id/status    更新用户状态
+  DELETE /api/v1/admin/users/:id         删除用户
+  POST /api/v1/admin/users/:id/reset-password  重置密码
+
+统计信息
+  GET  /api/v1/admin/statistics/users    用户统计
+
+==============================================
+认证说明
+==============================================
+
+用户认证（前台）
+  Header: Authorization: Bearer <user_token>
+  说明: 用于前台用户身份验证
+  
+管理员认证（后台）
+  Header: Authorization: Bearer admin_<admin_token>
+  说明: 用于后台管理员身份验证
+  要求: Token 必须以 "admin_" 开头（临时实现）
+  
+临时测试 Token
+  管理员: admin_test_token_123456
+  说明: 用于开发测试，生产环境需实现真实的 JWT
+
+==============================================
+测试示例
+==============================================
+
+前台 - 注册用户
+  curl -X POST http://localhost:8080/api/v1/public/register \
+    -H "Content-Type: application/json" \
+    -d '{"username":"test","email":"test@example.com","password":"pass123"}'
+
+后台 - 获取用户列表
+  curl http://localhost:8080/api/v1/admin/users \
+    -H "Authorization: Bearer admin_test_token_123456"
+
+==============================================
+

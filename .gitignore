@@ -1,0 +1,49 @@
+# Binaries for programs and plugins
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Test binary, built with `go test -c`
+*.test
+
+# Output of the go coverage tool
+*.out
+
+# Dependency directories
+vendor/
+
+# Go workspace file
+go.work
+
+# IDE directories
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Logs
+logs/
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Build directories
+bin/
+build/
+dist/
+
+# Configuration files (copy config.yaml.example to config.yaml)
+config/config.yaml
+
+# Wire generated files (optional, can be committed)
+# cmd/server/wire_gen.go
+
+# Temporary files
+tmp/
+temp/
+
