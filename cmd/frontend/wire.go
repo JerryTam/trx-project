@@ -52,6 +52,11 @@ func initFrontendApp(cfg *config.Config) (*gin.Engine, func(), error) {
 	return nil, nil, nil
 }
 
+// initLogger initializes logger for output
+func initLogger(cfg *config.Config) (*zap.Logger, error) {
+	return provideLogger(cfg)
+}
+
 // initDatabaseAndLogger initializes database and logger for migration
 func initDatabaseAndLogger(cfg *config.Config) (*gorm.DB, *zap.Logger, error) {
 	zapLogger, err := provideLogger(cfg)

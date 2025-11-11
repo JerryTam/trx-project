@@ -44,7 +44,8 @@ func initBackendApp(cfg *config.Config) (*gin.Engine, func(), error) {
 	userService := service.NewUserService(userRepository, client, logger, jwtConfig)
 	adminUserHandler := handler.NewAdminUserHandler(userService, logger)
 	rbacRepository := repository.NewRBACRepository(db)
-	rbacService := service.NewRBACService(rbacRepository, logger)
+	rbacCache := cache.NewRBACCache(client, logger)
+	rbacService := service.NewRBACService(rbacRepository, rbacCache, logger)
 	rbacHandler := handler.NewRBACHandler(rbacService, logger)
 	engine := provideBackendRouter(adminUserHandler, rbacHandler, rbacService, client, logger, cfg)
 	return engine, func() {

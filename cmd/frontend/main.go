@@ -9,10 +9,10 @@ import (
 	"os/signal"
 	"syscall"
 	"time"
-	"trx-project/internal/model"
 	"trx-project/pkg/config"
+	"trx-project/pkg/migrate"
 
-	"gorm.io/gorm"
+	"go.uber.org/zap"
 )
 
 func main() {
@@ -22,21 +22,27 @@ func main() {
 		log.Fatalf("Failed to load config: %v", err)
 	}
 
+	// Initialize logger first for migration
+	logger, err := initLogger(cfg)
+	if err != nil {
+		log.Fatalf("Failed to initialize logger: %v", err)
+	}
+
+	// Run database migrations if AUTO_MIGRATE is enabled
+	if os.Getenv("AUTO_MIGRATE") == "true" {
+		logger.Info("AUTO_MIGRATE enabled, running database migrations...")
+		if err := runMigrations(cfg, logger); err != nil {
+			log.Fatalf("Failed to run migrations: %v", err)
+		}
+		logger.Info("Database migrations completed successfully")
+	}
+
 	// Initialize app with Wire
 	router, cleanup, err := initFrontendApp(cfg)
 	if err != nil {
 		log.Fatalf("Failed to initialize frontend app: %v", err)
 	}
 	defer cleanup()
-
-	// Auto-migrate database
-	db, logger, err := initDatabaseAndLogger(cfg)
-	if err != nil {
-		log.Fatalf("Failed to initialize database: %v", err)
-	}
-	if err := autoMigrate(db); err != nil {
-		log.Fatalf("Failed to migrate database: %v", err)
-	}
 
 	// Create HTTP server
 	addr := fmt.Sprintf("%s:%d", cfg.Server.Host, cfg.Server.Port)
@@ -74,12 +80,28 @@ func main() {
 	logger.Sugar().Info("Frontend server exited")
 }
 
-func autoMigrate(db *gorm.DB) error {
-	return db.AutoMigrate(
-		&model.User{},
-		&model.Role{},
-		&model.Permission{},
-		&model.UserRole{},
-		&model.RolePermission{},
+// runMigrations 运行数据库迁移
+func runMigrations(cfg *config.Config, logger *zap.Logger) error {
+	// 构建数据库连接字符串
+	dsn := fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?charset=utf8mb4&parseTime=True&loc=Local&multiStatements=true",
+		cfg.Database.MySQL.Username,
+		cfg.Database.MySQL.Password,
+		cfg.Database.MySQL.Host,
+		cfg.Database.MySQL.Port,
+		cfg.Database.MySQL.Database,
 	)
+
+	// 创建迁移器
+	migrator, err := migrate.NewMigrator(&migrate.Config{
+		MigrationsPath: "file://migrations",
+		DatabaseURL:    dsn,
+		Logger:         logger,
+	})
+	if err != nil {
+		return fmt.Errorf("failed to create migrator: %w", err)
+	}
+	defer migrator.Close()
+
+	// 执行迁移
+	return migrator.Up()
 }

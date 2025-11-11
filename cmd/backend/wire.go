@@ -34,6 +34,9 @@ func initBackendApp(cfg *config.Config) (*gin.Engine, func(), error) {
 		// Redis
 		provideRedis,
 
+		// RBAC Cache
+		cache.NewRBACCache,
+
 		// JWT Config
 		provideAdminJWTConfig,
 
@@ -102,4 +105,3 @@ func provideBackendRouter(
 		cfg.Server.Mode,
 	)
 }
-

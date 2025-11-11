@@ -10,6 +10,9 @@ import (
 	"syscall"
 	"time"
 	"trx-project/pkg/config"
+	"trx-project/pkg/migrate"
+
+	"go.uber.org/zap"
 )
 
 func main() {
@@ -17,6 +20,21 @@ func main() {
 	cfg, err := config.Load("config/config.yaml")
 	if err != nil {
 		log.Fatalf("Failed to load config: %v", err)
+	}
+
+	// Initialize logger first for migration
+	logger, err := initLogger(cfg)
+	if err != nil {
+		log.Fatalf("Failed to initialize logger: %v", err)
+	}
+
+	// Run database migrations if AUTO_MIGRATE is enabled
+	if os.Getenv("AUTO_MIGRATE") == "true" {
+		logger.Info("AUTO_MIGRATE enabled, running database migrations...")
+		if err := runMigrations(cfg, logger); err != nil {
+			log.Fatalf("Failed to run migrations: %v", err)
+		}
+		logger.Info("Database migrations completed successfully")
 	}
 
 	// Initialize app with Wire
@@ -29,7 +47,7 @@ func main() {
 	// Backend uses different port
 	backendPort := cfg.Server.Port + 1 // Frontend 8080, Backend 8081
 	addr := fmt.Sprintf("%s:%d", cfg.Server.Host, backendPort)
-	
+
 	srv := &http.Server{
 		Addr:           addr,
 		Handler:        router,
@@ -37,9 +55,6 @@ func main() {
 		WriteTimeout:   10 * time.Second,
 		MaxHeaderBytes: 1 << 20,
 	}
-
-	// Get logger for output
-	logger, _ := initLogger(cfg)
 
 	// Start server in a goroutine
 	go func() {
@@ -67,3 +82,28 @@ func main() {
 	logger.Sugar().Info("Backend server exited")
 }
 
+// runMigrations 运行数据库迁移
+func runMigrations(cfg *config.Config, logger *zap.Logger) error {
+	// 构建数据库连接字符串
+	dsn := fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?charset=utf8mb4&parseTime=True&loc=Local&multiStatements=true",
+		cfg.Database.MySQL.Username,
+		cfg.Database.MySQL.Password,
+		cfg.Database.MySQL.Host,
+		cfg.Database.MySQL.Port,
+		cfg.Database.MySQL.Database,
+	)
+
+	// 创建迁移器
+	migrator, err := migrate.NewMigrator(&migrate.Config{
+		MigrationsPath: "file://migrations",
+		DatabaseURL:    dsn,
+		Logger:         logger,
+	})
+	if err != nil {
+		return fmt.Errorf("failed to create migrator: %w", err)
+	}
+	defer migrator.Close()
+
+	// 执行迁移
+	return migrator.Up()
+}

@@ -5,6 +5,7 @@ import (
 	"errors"
 	"trx-project/internal/model"
 	"trx-project/internal/repository"
+	"trx-project/pkg/cache"
 
 	"go.uber.org/zap"
 )
@@ -39,15 +40,19 @@ type RBACService interface {
 }
 
 type rbacService struct {
-	repo   repository.RBACRepository
-	logger *zap.Logger
+	repo      repository.RBACRepository
+	cache     *cache.RBACCache
+	logger    *zap.Logger
+	enableCache bool  // 是否启用缓存
 }
 
 // NewRBACService 创建 RBAC 服务
-func NewRBACService(repo repository.RBACRepository, logger *zap.Logger) RBACService {
+func NewRBACService(repo repository.RBACRepository, rbacCache *cache.RBACCache, logger *zap.Logger) RBACService {
 	return &rbacService{
-		repo:   repo,
-		logger: logger,
+		repo:        repo,
+		cache:       rbacCache,
+		logger:      logger,
+		enableCache: rbacCache != nil,  // 如果提供了缓存，则启用
 	}
 }
 
@@ -100,15 +105,74 @@ func (s *rbacService) CreatePermission(ctx context.Context, permission *model.Pe
 // RolePermission 相关实现
 
 func (s *rbacService) AssignPermissionsToRole(ctx context.Context, roleID uint, permissionIDs []uint) error {
-	return s.repo.AssignPermissionsToRole(ctx, roleID, permissionIDs)
+	err := s.repo.AssignPermissionsToRole(ctx, roleID, permissionIDs)
+	if err != nil {
+		return err
+	}
+	
+	// 使角色权限缓存失效
+	if s.enableCache {
+		if err := s.cache.InvalidateRoleCache(ctx, roleID); err != nil {
+			s.logger.Error("Failed to invalidate role cache",
+				zap.Uint("role_id", roleID),
+				zap.Error(err))
+		}
+	}
+	
+	return nil
 }
 
 func (s *rbacService) RemovePermissionsFromRole(ctx context.Context, roleID uint, permissionIDs []uint) error {
-	return s.repo.RemovePermissionsFromRole(ctx, roleID, permissionIDs)
+	err := s.repo.RemovePermissionsFromRole(ctx, roleID, permissionIDs)
+	if err != nil {
+		return err
+	}
+	
+	// 使角色权限缓存失效
+	if s.enableCache {
+		if err := s.cache.InvalidateRoleCache(ctx, roleID); err != nil {
+			s.logger.Error("Failed to invalidate role cache",
+				zap.Uint("role_id", roleID),
+				zap.Error(err))
+		}
+	}
+	
+	return nil
 }
 
 func (s *rbacService) GetRolePermissions(ctx context.Context, roleID uint) ([]*model.Permission, error) {
-	return s.repo.GetRolePermissions(ctx, roleID)
+	// 尝试从缓存获取
+	if s.enableCache {
+		if permissionCodes, ok := s.cache.GetRolePermissions(ctx, roleID); ok {
+			// 缓存命中，转换为 Permission 对象
+			permissions := make([]*model.Permission, 0, len(permissionCodes))
+			for _, code := range permissionCodes {
+				permissions = append(permissions, &model.Permission{Code: code})
+			}
+			return permissions, nil
+		}
+	}
+	
+	// 缓存未命中，从数据库获取
+	permissions, err := s.repo.GetRolePermissions(ctx, roleID)
+	if err != nil {
+		return nil, err
+	}
+	
+	// 存入缓存
+	if s.enableCache && len(permissions) > 0 {
+		permissionCodes := make([]string, 0, len(permissions))
+		for _, p := range permissions {
+			permissionCodes = append(permissionCodes, p.Code)
+		}
+		if err := s.cache.SetRolePermissions(ctx, roleID, permissionCodes); err != nil {
+			s.logger.Error("Failed to cache role permissions",
+				zap.Uint("role_id", roleID),
+				zap.Error(err))
+		}
+	}
+	
+	return permissions, nil
 }
 
 // UserRole 相关实现
@@ -120,11 +184,39 @@ func (s *rbacService) AssignRoleToUser(ctx context.Context, userID, roleID uint)
 		return errors.New("role not found")
 	}
 	
-	return s.repo.AssignRoleToUser(ctx, userID, roleID)
+	err = s.repo.AssignRoleToUser(ctx, userID, roleID)
+	if err != nil {
+		return err
+	}
+	
+	// 使用户缓存失效
+	if s.enableCache {
+		if err := s.cache.InvalidateUserCache(ctx, userID); err != nil {
+			s.logger.Error("Failed to invalidate user cache",
+				zap.Uint("user_id", userID),
+				zap.Error(err))
+		}
+	}
+	
+	return nil
 }
 
 func (s *rbacService) RemoveRoleFromUser(ctx context.Context, userID, roleID uint) error {
-	return s.repo.RemoveRoleFromUser(ctx, userID, roleID)
+	err := s.repo.RemoveRoleFromUser(ctx, userID, roleID)
+	if err != nil {
+		return err
+	}
+	
+	// 使用户缓存失效
+	if s.enableCache {
+		if err := s.cache.InvalidateUserCache(ctx, userID); err != nil {
+			s.logger.Error("Failed to invalidate user cache",
+				zap.Uint("user_id", userID),
+				zap.Error(err))
+		}
+	}
+	
+	return nil
 }
 
 func (s *rbacService) GetUserRoles(ctx context.Context, userID uint) ([]*model.Role, error) {
@@ -132,11 +224,71 @@ func (s *rbacService) GetUserRoles(ctx context.Context, userID uint) ([]*model.R
 }
 
 func (s *rbacService) GetUserPermissions(ctx context.Context, userID uint) ([]*model.Permission, error) {
-	return s.repo.GetUserPermissions(ctx, userID)
+	// 尝试从缓存获取
+	if s.enableCache {
+		if permissionCodes, ok := s.cache.GetUserPermissions(ctx, userID); ok {
+			// 缓存命中，转换为 Permission 对象
+			permissions := make([]*model.Permission, 0, len(permissionCodes))
+			for _, code := range permissionCodes {
+				permissions = append(permissions, &model.Permission{Code: code})
+			}
+			s.logger.Debug("User permissions cache hit", zap.Uint("user_id", userID))
+			return permissions, nil
+		}
+	}
+	
+	// 缓存未命中，从数据库获取
+	permissions, err := s.repo.GetUserPermissions(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+	
+	// 存入缓存
+	if s.enableCache && len(permissions) > 0 {
+		permissionCodes := make([]string, 0, len(permissions))
+		for _, p := range permissions {
+			permissionCodes = append(permissionCodes, p.Code)
+		}
+		if err := s.cache.SetUserPermissions(ctx, userID, permissionCodes); err != nil {
+			s.logger.Error("Failed to cache user permissions",
+				zap.Uint("user_id", userID),
+				zap.Error(err))
+		}
+	}
+	
+	return permissions, nil
 }
 
 func (s *rbacService) HasPermission(ctx context.Context, userID uint, permissionCode string) (bool, error) {
-	return s.repo.HasPermission(ctx, userID, permissionCode)
+	// 尝试从缓存获取权限检查结果
+	if s.enableCache {
+		if hasPermission, ok := s.cache.CheckPermissionCached(ctx, userID, permissionCode); ok {
+			// 缓存命中
+			s.logger.Debug("Permission check cache hit",
+				zap.Uint("user_id", userID),
+				zap.String("permission", permissionCode),
+				zap.Bool("has_permission", hasPermission))
+			return hasPermission, nil
+		}
+	}
+	
+	// 缓存未命中，从数据库查询
+	hasPermission, err := s.repo.HasPermission(ctx, userID, permissionCode)
+	if err != nil {
+		return false, err
+	}
+	
+	// 存入缓存
+	if s.enableCache {
+		if err := s.cache.SetPermissionCheck(ctx, userID, permissionCode, hasPermission); err != nil {
+			s.logger.Error("Failed to cache permission check",
+				zap.Uint("user_id", userID),
+				zap.String("permission", permissionCode),
+				zap.Error(err))
+		}
+	}
+	
+	return hasPermission, nil
 }
 
 // CheckPermission 检查用户是否有指定权限，没有则返回错误

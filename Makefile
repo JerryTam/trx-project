@@ -64,7 +64,37 @@ docker-down: ## 停止 Docker 服务
 	docker-compose down
 	@echo "✅ Docker 服务已停止"
 
-migrate: ## 运行数据库迁移
-	go run cmd/frontend/*.go migrate
+# ==================== 数据库迁移 ====================
+
+migrate-up: ## 执行所有待执行的迁移
+	@./scripts/migrate.sh up
+
+migrate-down: ## 回滚一个迁移版本
+	@./scripts/migrate.sh down
+
+migrate-version: ## 查看当前迁移版本
+	@./scripts/migrate.sh version
+
+migrate-force: ## 强制设置迁移版本 (用法: make migrate-force VERSION=1)
+	@./scripts/migrate.sh force
+
+migrate-goto: ## 迁移到指定版本 (用法: make migrate-goto VERSION=3)
+	@./scripts/migrate.sh goto
+
+migrate-create: ## 创建新的迁移文件 (用法: make migrate-create NAME=add_user_phone)
+	@./scripts/migrate.sh create
+
+migrate-drop: ## 删除所有表 (危险操作)
+	@./scripts/migrate.sh drop
+
+# Swagger 文档生成
+swag-frontend: ## 生成前台 Swagger 文档
+	swag init -g cmd/frontend/main.go -o cmd/frontend/docs --parseDependency --parseInternal
+
+swag-backend: ## 生成后台 Swagger 文档
+	swag init -g cmd/backend/main.go -o cmd/backend/docs --parseDependency --parseInternal
+
+swag: swag-frontend swag-backend ## 生成所有 Swagger 文档
+	@echo "✅ Swagger 文档生成完成"
 
 .DEFAULT_GOAL := help
