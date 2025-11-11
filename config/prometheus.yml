@@ -1,0 +1,69 @@
+# Prometheus 配置文件
+
+global:
+  scrape_interval: 15s # 每 15 秒采集一次数据
+  evaluation_interval: 15s # 每 15 秒评估一次规则
+  external_labels:
+    cluster: 'trx-project'
+    environment: 'dev'
+
+# 告警管理器配置（可选）
+# alerting:
+#   alertmanagers:
+#     - static_configs:
+#         - targets:
+#           - alertmanager:9093
+
+# 规则文件（可选）
+# rule_files:
+#   - "rules/*.yml"
+
+# 采集配置
+scrape_configs:
+  # Prometheus 自身监控
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+        labels:
+          service: 'prometheus'
+
+  # 前台服务监控
+  - job_name: 'frontend'
+    metrics_path: '/metrics'
+    static_configs:
+      - targets: ['host.docker.internal:8080']  # Windows/Mac Docker
+        # - targets: ['172.17.0.1:8080']        # Linux Docker
+        labels:
+          service: 'frontend'
+          env: 'dev'
+
+  # 后台服务监控
+  - job_name: 'backend'
+    metrics_path: '/metrics'
+    static_configs:
+      - targets: ['host.docker.internal:8081']  # Windows/Mac Docker
+        # - targets: ['172.17.0.1:8081']        # Linux Docker
+        labels:
+          service: 'backend'
+          env: 'dev'
+
+  # MySQL 监控（如果使用 mysqld_exporter）
+  # - job_name: 'mysql'
+  #   static_configs:
+  #     - targets: ['mysql-exporter:9104']
+  #       labels:
+  #         service: 'mysql'
+
+  # Redis 监控（如果使用 redis_exporter）
+  # - job_name: 'redis'
+  #   static_configs:
+  #     - targets: ['redis-exporter:9121']
+  #       labels:
+  #         service: 'redis'
+
+# 存储配置
+storage:
+  tsdb:
+    path: /prometheus
+    retention.time: 15d  # 保留 15 天的数据
+

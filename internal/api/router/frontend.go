@@ -4,8 +4,10 @@ import (
 	"trx-project/internal/api/handler"
 	"trx-project/internal/api/middleware"
 	"trx-project/pkg/config"
+	"trx-project/pkg/metrics"
 
 	"github.com/gin-gonic/gin"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/redis/go-redis/v9"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
@@ -26,11 +28,15 @@ func SetupFrontend(
 
 	r := gin.New()
 
+	// 创建 Prometheus 指标
+	m := metrics.NewMetrics("trx")
+
 	// Apply global middleware
-	// 顺序很重要：Recovery → RequestID → Logger → CORS
+	// 顺序很重要：Recovery → RequestID → Prometheus → Logger → CORS
 	r.Use(middleware.Recovery(logger))
-	r.Use(middleware.RequestID(logger))  // 请求 ID 追踪
-	r.Use(middleware.Logger(logger))     // 日志记录（会包含请求 ID）
+	r.Use(middleware.RequestID(logger))         // 请求 ID 追踪
+	r.Use(middleware.PrometheusMiddleware(m, "frontend")) // Prometheus 监控
+	r.Use(middleware.Logger(logger))            // 日志记录（会包含请求 ID）
 	r.Use(middleware.CORS())
 
 	// 限流中间件
@@ -58,6 +64,9 @@ func SetupFrontend(
 			"service": "frontend",
 		})
 	})
+
+	// Prometheus metrics 端点
+	r.GET("/metrics", gin.WrapH(promhttp.Handler()))
 
 	// Swagger 文档
 	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
