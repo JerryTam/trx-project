@@ -3,6 +3,7 @@ package config
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 
 	"gopkg.in/yaml.v3"
 )
@@ -20,6 +21,7 @@ type ServerConfig struct {
 	Host string `yaml:"host"`
 	Port int    `yaml:"port"`
 	Mode string `yaml:"mode"`
+	Env  string `yaml:"env"` // 运行环境: dev, test, prod
 }
 
 type DatabaseConfig struct {
@@ -67,9 +69,37 @@ type JWTConfig struct {
 	AdminExpireHours int    `yaml:"admin_expire_hours"` // 管理员 Token 过期时间（小时）
 }
 
-// Load loads configuration from yaml file
+// Load 根据环境加载配置文件
+// 优先级: 环境变量 GO_ENV > 命令行参数 > 默认值 (dev)
+// 配置文件命名: config.{env}.yaml
 func Load(path string) (*Config, error) {
-	data, err := os.ReadFile(path)
+	// 获取环境配置
+	env := GetEnv()
+	
+	// 如果 path 为空，使用默认路径
+	if path == "" {
+		path = "config/config.yaml"
+	}
+	
+	// 构建环境特定的配置文件路径
+	dir := filepath.Dir(path)
+	ext := filepath.Ext(path)
+	base := filepath.Base(path)
+	nameWithoutExt := base[:len(base)-len(ext)]
+	
+	// 尝试加载环境特定配置文件，如 config.dev.yaml
+	envConfigPath := filepath.Join(dir, fmt.Sprintf("%s.%s%s", nameWithoutExt, env, ext))
+	
+	// 如果环境配置文件存在，使用它；否则使用默认配置文件
+	configPath := path
+	if _, err := os.Stat(envConfigPath); err == nil {
+		configPath = envConfigPath
+		fmt.Printf("✅ 加载环境配置: %s (环境: %s)\n", configPath, env)
+	} else {
+		fmt.Printf("⚠️  环境配置文件不存在 (%s)，使用默认配置: %s\n", envConfigPath, path)
+	}
+	
+	data, err := os.ReadFile(configPath)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read config file: %w", err)
 	}
@@ -79,7 +109,20 @@ func Load(path string) (*Config, error) {
 		return nil, fmt.Errorf("failed to unmarshal config: %w", err)
 	}
 
+	// 设置当前环境
+	cfg.Server.Env = env
+
 	return &cfg, nil
+}
+
+// GetEnv 获取当前运行环境
+// 优先级: 1. GO_ENV 环境变量 2. 默认 dev
+func GetEnv() string {
+	env := os.Getenv("GO_ENV")
+	if env == "" {
+		env = "dev"
+	}
+	return env
 }
 
 // GetDSN returns MySQL DSN string

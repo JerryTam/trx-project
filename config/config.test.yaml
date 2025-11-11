@@ -1,0 +1,49 @@
+# 测试环境配置
+server:
+  host: 0.0.0.0
+  port: 8080
+  mode: release
+  env: test
+
+database:
+  mysql:
+    host: test-mysql-server
+    port: 3306
+    username: test_user
+    password: test_password
+    database: trx_test
+    charset: utf8mb4
+    max_idle_conns: 10
+    max_open_conns: 50
+    conn_max_lifetime: 3600
+
+redis:
+  host: test-redis-server
+  port: 6379
+  password: test_redis_password
+  db: 0
+  pool_size: 10
+
+kafka:
+  brokers:
+    - test-kafka-server:9092
+  group_id: trx-test-group
+  topics:
+    - trx-test-topic
+
+logger:
+  level: info
+  encoding: json
+  output_paths:
+    - stdout
+    - logs/test/app.log
+  error_output_paths:
+    - stderr
+    - logs/test/error.log
+
+jwt:
+  secret: test-secret-key-change-in-production
+  issuer: trx-project-test
+  expire_hours: 24 # 1天
+  admin_expire_hours: 8 # 8小时
+

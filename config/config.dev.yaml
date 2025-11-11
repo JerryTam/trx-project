@@ -1,0 +1,49 @@
+# 开发环境配置
+server:
+  host: 0.0.0.0
+  port: 8080
+  mode: debug # debug, release
+  env: dev
+
+database:
+  mysql:
+    host: localhost
+    port: 3306
+    username: root
+    password: root123456
+    database: trx_dev
+    charset: utf8mb4
+    max_idle_conns: 10
+    max_open_conns: 100
+    conn_max_lifetime: 3600
+
+redis:
+  host: localhost
+  port: 6379
+  password: ""
+  db: 0
+  pool_size: 10
+
+kafka:
+  brokers:
+    - localhost:9092
+  group_id: trx-dev-group
+  topics:
+    - trx-dev-topic
+
+logger:
+  level: debug # debug, info, warn, error
+  encoding: console # json, console (开发环境使用 console 便于阅读)
+  output_paths:
+    - stdout
+    - logs/dev/app.log
+  error_output_paths:
+    - stderr
+    - logs/dev/error.log
+
+jwt:
+  secret: dev-secret-key-change-in-production
+  issuer: trx-project-dev
+  expire_hours: 168 # 7天
+  admin_expire_hours: 24 # 1天
+

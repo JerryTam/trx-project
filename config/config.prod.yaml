@@ -1,0 +1,51 @@
+# 生产环境配置
+server:
+  host: 0.0.0.0
+  port: 8080
+  mode: release
+  env: prod
+
+database:
+  mysql:
+    host: prod-mysql-server
+    port: 3306
+    username: prod_user
+    password: CHANGE_ME_IN_PRODUCTION
+    database: trx_prod
+    charset: utf8mb4
+    max_idle_conns: 20
+    max_open_conns: 200
+    conn_max_lifetime: 3600
+
+redis:
+  host: prod-redis-server
+  port: 6379
+  password: CHANGE_ME_IN_PRODUCTION
+  db: 0
+  pool_size: 50
+
+kafka:
+  brokers:
+    - prod-kafka-server1:9092
+    - prod-kafka-server2:9092
+    - prod-kafka-server3:9092
+  group_id: trx-prod-group
+  topics:
+    - trx-prod-topic
+
+logger:
+  level: info
+  encoding: json
+  output_paths:
+    - stdout
+    - /var/log/trx-project/app.log
+  error_output_paths:
+    - stderr
+    - /var/log/trx-project/error.log
+
+jwt:
+  secret: CHANGE_ME_IN_PRODUCTION_USE_STRONG_SECRET_KEY
+  issuer: trx-project-prod
+  expire_hours: 168 # 7天
+  admin_expire_hours: 12 # 12小时
+

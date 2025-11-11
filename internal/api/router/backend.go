@@ -5,6 +5,8 @@ import (
 	"trx-project/internal/api/middleware"
 
 	"github.com/gin-gonic/gin"
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 	"go.uber.org/zap"
 )
 
@@ -32,6 +34,9 @@ func SetupBackend(
 			"service": "backend",
 		})
 	})
+
+	// Swagger 文档
+	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	// API v1 routes
 	v1 := r.Group("/api/v1")

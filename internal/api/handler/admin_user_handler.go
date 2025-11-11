@@ -24,7 +24,23 @@ func NewAdminUserHandler(service service.UserService, logger *zap.Logger) *Admin
 	}
 }
 
-// ListUsers 获取用户列表（后台）
+// ListUsers 获取用户列表
+// @Summary 获取用户列表（后台）
+// @Description 分页获取用户列表，支持状态筛选和关键词搜索
+// @Tags 用户管理
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param page query int false "页码，默认1" default(1)
+// @Param page_size query int false "每页数量，默认10" default(10)
+// @Param status query string false "用户状态筛选"
+// @Param keyword query string false "关键词搜索（用户名或邮箱）"
+// @Success 200 {object} response.Response{data=map[string]interface{}} "成功获取用户列表"
+// @Failure 400 {object} response.Response "请求参数错误"
+// @Failure 401 {object} response.Response "未授权"
+// @Failure 403 {object} response.Response "无管理员权限"
+// @Failure 500 {object} response.Response "服务器内部错误"
+// @Router /admin/users [get]
 func (h *AdminUserHandler) ListUsers(c *gin.Context) {
 	// 获取管理员信息
 	adminID, _ := middleware.GetAdminID(c)
@@ -51,7 +67,21 @@ func (h *AdminUserHandler) ListUsers(c *gin.Context) {
 	response.PageSuccess(c, users, total, page, pageSize)
 }
 
-// GetUser 获取用户详情（后台）
+// GetUser 获取用户详情
+// @Summary 获取用户详情（后台）
+// @Description 根据用户ID获取用户的详细信息
+// @Tags 用户管理
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param id path int true "用户ID"
+// @Success 200 {object} response.Response{data=model.User} "成功获取用户详情"
+// @Failure 400 {object} response.Response "无效的用户ID"
+// @Failure 401 {object} response.Response "未授权"
+// @Failure 403 {object} response.Response "无管理员权限"
+// @Failure 404 {object} response.Response "用户不存在"
+// @Failure 500 {object} response.Response "服务器内部错误"
+// @Router /admin/users/{id} [get]
 func (h *AdminUserHandler) GetUser(c *gin.Context) {
 	adminID, _ := middleware.GetAdminID(c)
 
@@ -80,7 +110,22 @@ func (h *AdminUserHandler) GetUser(c *gin.Context) {
 	response.Success(c, user)
 }
 
-// UpdateUserStatus 更新用户状态（后台）
+// UpdateUserStatus 更新用户状态
+// @Summary 更新用户状态（后台）
+// @Description 更新用户的状态（启用/禁用）
+// @Tags 用户管理
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param id path int true "用户ID"
+// @Param request body object{status=int} true "状态信息，1-启用 0-禁用"
+// @Success 200 {object} response.Response "更新成功"
+// @Failure 400 {object} response.Response "请求参数错误"
+// @Failure 401 {object} response.Response "未授权"
+// @Failure 403 {object} response.Response "无管理员权限"
+// @Failure 404 {object} response.Response "用户不存在"
+// @Failure 500 {object} response.Response "服务器内部错误"
+// @Router /admin/users/{id}/status [put]
 func (h *AdminUserHandler) UpdateUserStatus(c *gin.Context) {
 	adminID, _ := middleware.GetAdminID(c)
 
@@ -124,7 +169,21 @@ func (h *AdminUserHandler) UpdateUserStatus(c *gin.Context) {
 	response.SuccessWithMsg(c, "User status updated successfully", user)
 }
 
-// DeleteUser 删除用户（后台）
+// DeleteUser 删除用户
+// @Summary 删除用户（后台）
+// @Description 根据用户ID删除用户（软删除）
+// @Tags 用户管理
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param id path int true "用户ID"
+// @Success 200 {object} response.Response "删除成功"
+// @Failure 400 {object} response.Response "无效的用户ID"
+// @Failure 401 {object} response.Response "未授权"
+// @Failure 403 {object} response.Response "无管理员权限"
+// @Failure 404 {object} response.Response "用户不存在"
+// @Failure 500 {object} response.Response "服务器内部错误"
+// @Router /admin/users/{id} [delete]
 func (h *AdminUserHandler) DeleteUser(c *gin.Context) {
 	adminID, _ := middleware.GetAdminID(c)
 
@@ -148,7 +207,18 @@ func (h *AdminUserHandler) DeleteUser(c *gin.Context) {
 	response.SuccessWithMsg(c, "User deleted successfully", nil)
 }
 
-// GetStatistics 获取用户统计信息（后台）
+// GetStatistics 获取用户统计信息
+// @Summary 获取用户统计信息（后台）
+// @Description 获取用户相关的统计数据，如总数、活跃数等
+// @Tags 统计信息
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Success 200 {object} response.Response{data=map[string]interface{}} "成功获取统计信息"
+// @Failure 401 {object} response.Response "未授权"
+// @Failure 403 {object} response.Response "无管理员权限"
+// @Failure 500 {object} response.Response "服务器内部错误"
+// @Router /admin/statistics/users [get]
 func (h *AdminUserHandler) GetStatistics(c *gin.Context) {
 	adminID, _ := middleware.GetAdminID(c)
 	h.logger.Info("Admin getting user statistics", zap.Uint("admin_id", adminID))
@@ -166,7 +236,22 @@ func (h *AdminUserHandler) GetStatistics(c *gin.Context) {
 	response.Success(c, stats)
 }
 
-// ResetPassword 重置用户密码（后台）
+// ResetPassword 重置用户密码
+// @Summary 重置用户密码（后台）
+// @Description 管理员重置指定用户的密码
+// @Tags 用户管理
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param id path int true "用户ID"
+// @Param request body object{new_password=string} true "新密码"
+// @Success 200 {object} response.Response "重置成功"
+// @Failure 400 {object} response.Response "请求参数错误"
+// @Failure 401 {object} response.Response "未授权"
+// @Failure 403 {object} response.Response "无管理员权限"
+// @Failure 404 {object} response.Response "用户不存在"
+// @Failure 500 {object} response.Response "服务器内部错误"
+// @Router /admin/users/{id}/reset-password [post]
 func (h *AdminUserHandler) ResetPassword(c *gin.Context) {
 	adminID, _ := middleware.GetAdminID(c)
 
