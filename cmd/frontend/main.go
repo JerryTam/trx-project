@@ -77,6 +77,9 @@ func main() {
 func autoMigrate(db *gorm.DB) error {
 	return db.AutoMigrate(
 		&model.User{},
-		// Add more models here
+		&model.Role{},
+		&model.Permission{},
+		&model.UserRole{},
+		&model.RolePermission{},
 	)
 }

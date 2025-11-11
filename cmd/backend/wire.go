@@ -39,12 +39,15 @@ func initBackendApp(cfg *config.Config) (*gin.Engine, func(), error) {
 
 		// Repository
 		repository.NewUserRepository,
+		repository.NewRBACRepository,
 
 		// Service
 		service.NewUserService,
+		service.NewRBACService,
 
 		// Handler
 		handler.NewAdminUserHandler,
+		handler.NewRBACHandler,
 
 		// Backend Router
 		provideBackendRouter,
@@ -82,9 +85,11 @@ func provideAdminJWTConfig(cfg *config.Config) jwt.Config {
 
 func provideBackendRouter(
 	adminUserHandler *handler.AdminUserHandler,
+	rbacHandler *handler.RBACHandler,
+	rbacService service.RBACService,
 	logger *zap.Logger,
 	cfg *config.Config,
 ) *gin.Engine {
-	return router.SetupBackend(adminUserHandler, cfg.JWT.Secret, logger, cfg.Server.Mode)
+	return router.SetupBackend(adminUserHandler, rbacHandler, rbacService, cfg.JWT.Secret, logger, cfg.Server.Mode)
 }
 

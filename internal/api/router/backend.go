@@ -3,6 +3,7 @@ package router
 import (
 	"trx-project/internal/api/handler"
 	"trx-project/internal/api/middleware"
+	"trx-project/internal/service"
 
 	"github.com/gin-gonic/gin"
 	swaggerFiles "github.com/swaggo/files"
@@ -13,6 +14,8 @@ import (
 // SetupBackend sets up the backend router
 func SetupBackend(
 	adminUserHandler *handler.AdminUserHandler,
+	rbacHandler *handler.RBACHandler,
+	rbacService service.RBACService,
 	jwtSecret string,
 	logger *zap.Logger,
 	mode string,
@@ -45,28 +48,62 @@ func SetupBackend(
 		admin := v1.Group("/admin")
 		admin.Use(middleware.AdminAuth(jwtSecret, logger))
 		{
-			// 用户管理
-			adminUsers := admin.Group("/users")
+			// ==================== RBAC 管理 ====================
+			rbac := admin.Group("/rbac")
+			rbac.Use(middleware.RequirePermission("rbac:manage", rbacService, logger)) // 需要 RBAC 管理权限
 			{
-				adminUsers.GET("", adminUserHandler.ListUsers)                         // 获取用户列表
-				adminUsers.GET("/:id", adminUserHandler.GetUser)                       // 获取用户详情
-				adminUsers.PUT("/:id/status", adminUserHandler.UpdateUserStatus)       // 更新用户状态
-				adminUsers.DELETE("/:id", adminUserHandler.DeleteUser)                 // 删除用户
-				adminUsers.POST("/:id/reset-password", adminUserHandler.ResetPassword) // 重置密码
+				// 角色管理
+				rbac.GET("/roles", rbacHandler.ListRoles)                                // 获取角色列表
+				rbac.GET("/roles/:id", rbacHandler.GetRole)                              // 获取角色详情
+				rbac.POST("/roles", rbacHandler.CreateRole)                              // 创建角色
+				rbac.POST("/roles/:id/permissions", rbacHandler.AssignPermissionsToRole) // 为角色分配权限
+
+				// 权限管理
+				rbac.GET("/permissions", rbacHandler.ListPermissions) // 获取权限列表
 			}
 
-			// 统计信息
+			// ==================== 用户管理 ====================
+			adminUsers := admin.Group("/users")
+			{
+				// 查看用户（需要 user:read 权限）
+				adminUsers.GET("",
+					middleware.RequirePermission("user:read", rbacService, logger),
+					adminUserHandler.ListUsers)
+				adminUsers.GET("/:id",
+					middleware.RequirePermission("user:read", rbacService, logger),
+					adminUserHandler.GetUser)
+
+				// 修改用户（需要 user:write 权限）
+				adminUsers.PUT("/:id/status",
+					middleware.RequirePermission("user:write", rbacService, logger),
+					adminUserHandler.UpdateUserStatus)
+				adminUsers.POST("/:id/reset-password",
+					middleware.RequirePermission("user:write", rbacService, logger),
+					adminUserHandler.ResetPassword)
+
+				// 删除用户（需要 user:delete 权限）
+				adminUsers.DELETE("/:id",
+					middleware.RequirePermission("user:delete", rbacService, logger),
+					adminUserHandler.DeleteUser)
+
+				// 用户角色管理（需要 rbac:manage 权限）
+				adminUsers.POST("/:user_id/role",
+					middleware.RequirePermission("rbac:manage", rbacService, logger),
+					rbacHandler.AssignRoleToUser)
+				adminUsers.GET("/:user_id/roles",
+					middleware.RequirePermission("rbac:manage", rbacService, logger),
+					rbacHandler.GetUserRoles)
+				adminUsers.GET("/:user_id/permissions",
+					middleware.RequirePermission("rbac:manage", rbacService, logger),
+					rbacHandler.GetUserPermissions)
+			}
+
+			// ==================== 统计信息 ====================
 			adminStats := admin.Group("/statistics")
+			adminStats.Use(middleware.RequirePermission("statistics:read", rbacService, logger))
 			{
 				adminStats.GET("/users", adminUserHandler.GetStatistics) // 用户统计
 			}
-
-			// 后续可以添加更多管理功能
-			// - 内容管理
-			// - 订单管理
-			// - 系统配置
-			// - 操作日志
-			// etc.
 		}
 	}
 
