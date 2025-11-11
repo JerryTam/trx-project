@@ -234,6 +234,81 @@ done
 
 📖 **详细文档**: [限流使用指南](RATE_LIMIT_GUIDE.md)
 
+## 🔍 请求 ID 追踪
+
+### 功能介绍
+
+为每个请求分配唯一的标识符（UUID），用于追踪完整的请求链路，便于调试和日志分析。
+
+### 主要特性
+
+✅ **自动生成** - 服务器自动为每个请求生成唯一 UUID  
+✅ **客户端指定** - 支持通过 `X-Request-ID` 头传递请求 ID  
+✅ **日志集成** - 所有日志自动包含请求 ID  
+✅ **响应头返回** - 每个响应都包含 `X-Request-ID` 头
+
+### 使用示例
+
+#### 自动生成
+
+```bash
+# 发送普通请求
+curl -i http://localhost:8080/health
+
+# 响应头包含请求 ID
+HTTP/1.1 200 OK
+X-Request-ID: 550e8400-e29b-41d4-a716-446655440000
+...
+```
+
+#### 客户端指定
+
+```bash
+# 指定请求 ID（用于链路追踪）
+curl -i -H "X-Request-ID: my-trace-id-12345" \
+  http://localhost:8080/api/v1/public/login
+
+# 服务器返回相同的 ID
+HTTP/1.1 200 OK
+X-Request-ID: my-trace-id-12345
+...
+```
+
+### 日志追踪
+
+所有日志自动包含 `request_id` 字段：
+
+```json
+{
+  "level": "info",
+  "msg": "HTTP Request",
+  "request_id": "550e8400-e29b-41d4-a716-446655440000",
+  "method": "POST",
+  "path": "/api/v1/public/login",
+  "status": 200,
+  "latency": "15ms"
+}
+```
+
+**追踪特定请求**：
+
+```bash
+# 查看特定请求的所有日志
+grep "550e8400-e29b-41d4-a716-446655440000" logs/app.log
+
+# 实时追踪
+tail -f logs/app.log | grep "550e8400-e29b-41d4-a716-446655440000"
+```
+
+### 测试验证
+
+```bash
+# 运行请求 ID 测试脚本
+./scripts/test_request_id.sh
+```
+
+📖 **详细文档**: [请求 ID 追踪指南](REQUEST_ID_GUIDE.md)
+
 ## 📡 API 接口
 
 ### 前台服务 (Port 8080)

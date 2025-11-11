@@ -30,8 +30,10 @@ func SetupBackend(
 	r := gin.New()
 
 	// Apply global middleware
+	// 顺序很重要：Recovery → RequestID → Logger → CORS
 	r.Use(middleware.Recovery(logger))
-	r.Use(middleware.Logger(logger))
+	r.Use(middleware.RequestID(logger)) // 请求 ID 追踪
+	r.Use(middleware.Logger(logger))    // 日志记录（会包含请求 ID）
 	r.Use(middleware.CORS())
 
 	// 限流中间件
