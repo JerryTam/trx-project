@@ -12,6 +12,7 @@ import (
 	"github.com/redis/go-redis/v9"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
+	"go.opentelemetry.io/contrib/instrumentation/github.com/gin-gonic/gin/otelgin"
 	"go.uber.org/zap"
 )
 
@@ -35,8 +36,15 @@ func SetupBackend(
 	m := metrics.NewMetrics("trx")
 
 	// Apply global middleware
-	// 顺序很重要：Recovery → RequestID → Prometheus → Logger → CORS
+	// 顺序很重要：Recovery → OpenTelemetry → RequestID → Prometheus → Logger → CORS
 	r.Use(middleware.Recovery(logger))
+
+	// OpenTelemetry 链路追踪
+	if cfg.Tracing.Enabled {
+		r.Use(otelgin.Middleware(cfg.Tracing.ServiceName))
+		logger.Info("OpenTelemetry tracing enabled for backend")
+	}
+
 	r.Use(middleware.RequestID(logger))                  // 请求 ID 追踪
 	r.Use(middleware.PrometheusMiddleware(m, "backend")) // Prometheus 监控
 	r.Use(middleware.Logger(logger))                     // 日志记录（会包含请求 ID）

@@ -16,6 +16,7 @@ type Config struct {
 	Logger    LoggerConfig    `yaml:"logger"`
 	JWT       JWTConfig       `yaml:"jwt"`
 	RateLimit RateLimitConfig `yaml:"rate_limit"`
+	Tracing   TracingConfig   `yaml:"tracing"`
 }
 
 type ServerConfig struct {
@@ -76,6 +77,14 @@ type RateLimitConfig struct {
 	GlobalRate string `yaml:"global_rate"` // 全局限流：例如 "1000-S" (每秒1000个请求)
 	IPRate     string `yaml:"ip_rate"`     // IP限流：例如 "100-M" (每分钟100个请求)
 	UserRate   string `yaml:"user_rate"`   // 用户限流：例如 "1000-M" (每分钟1000个请求)
+}
+
+// TracingConfig OpenTelemetry 追踪配置
+type TracingConfig struct {
+	Enabled        bool   `yaml:"enabled"`         // 是否启用追踪
+	ServiceName    string `yaml:"service_name"`    // 服务名称
+	ServiceVersion string `yaml:"service_version"` // 服务版本
+	JaegerEndpoint string `yaml:"jaeger_endpoint"` // Jaeger OTLP HTTP 端点
 }
 
 // Load 根据环境加载配置文件

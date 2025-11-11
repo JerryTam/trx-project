@@ -11,6 +11,7 @@ import (
 	"time"
 	"trx-project/pkg/config"
 	"trx-project/pkg/migrate"
+	"trx-project/pkg/tracing"
 
 	"go.uber.org/zap"
 )
@@ -27,6 +28,25 @@ func main() {
 	if err != nil {
 		log.Fatalf("Failed to initialize logger: %v", err)
 	}
+
+	// Initialize OpenTelemetry tracing
+	tracingCleanup, err := tracing.InitTracer(&tracing.Config{
+		ServiceName:    cfg.Tracing.ServiceName + "-backend",
+		ServiceVersion: cfg.Tracing.ServiceVersion,
+		Environment:    cfg.Server.Env,
+		JaegerEndpoint: cfg.Tracing.JaegerEndpoint,
+		Enabled:        cfg.Tracing.Enabled,
+	}, logger)
+	if err != nil {
+		log.Fatalf("Failed to initialize tracing: %v", err)
+	}
+	defer func() {
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		if err := tracingCleanup(ctx); err != nil {
+			logger.Error("Failed to cleanup tracing", zap.Error(err))
+		}
+	}()
 
 	// Run database migrations if AUTO_MIGRATE is enabled
 	if os.Getenv("AUTO_MIGRATE") == "true" {

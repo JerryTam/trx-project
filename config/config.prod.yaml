@@ -56,3 +56,10 @@ rate_limit:
   ip_rate: "60-M"          # IP限流：每IP每分钟60个请求
   user_rate: "500-M"       # 用户限流：每用户每分钟500个请求
 
+
+# OpenTelemetry 链路追踪配置
+tracing:
+  enabled: true
+  service_name: "trx-project"
+  service_version: "1.0.0"
+  jaeger_endpoint: "jaeger:4318" # 生产环境使用容器名称
