@@ -122,23 +122,23 @@ func (r *rbacRepository) DeletePermission(ctx context.Context, id uint) error {
 
 func (r *rbacRepository) AssignPermissionsToRole(ctx context.Context, roleID uint, permissionIDs []uint) error {
 	role := model.Role{ID: roleID}
-	
+
 	var permissions []model.Permission
 	if err := r.db.WithContext(ctx).Find(&permissions, permissionIDs).Error; err != nil {
 		return err
 	}
-	
+
 	return r.db.WithContext(ctx).Model(&role).Association("Permissions").Append(permissions)
 }
 
 func (r *rbacRepository) RemovePermissionsFromRole(ctx context.Context, roleID uint, permissionIDs []uint) error {
 	role := model.Role{ID: roleID}
-	
+
 	var permissions []model.Permission
 	if err := r.db.WithContext(ctx).Find(&permissions, permissionIDs).Error; err != nil {
 		return err
 	}
-	
+
 	return r.db.WithContext(ctx).Model(&role).Association("Permissions").Delete(permissions)
 }
 
@@ -195,7 +195,6 @@ func (r *rbacRepository) HasPermission(ctx context.Context, userID uint, permiss
 		Joins("JOIN user_roles ON user_roles.role_id = role_permissions.role_id").
 		Where("user_roles.user_id = ? AND permissions.code = ? AND permissions.status = 1", userID, permissionCode).
 		Count(&count).Error
-	
+
 	return count > 0, err
 }
-

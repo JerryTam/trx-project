@@ -89,12 +89,24 @@ migrate-drop: ## 删除所有表 (危险操作)
 
 # Swagger 文档生成
 swag-frontend: ## 生成前台 Swagger 文档
-	swag init -g cmd/frontend/main.go -o cmd/frontend/docs --parseDependency --parseInternal
+	@echo "🔄 生成前台 Swagger 文档（排除后台 handler）..."
+	@swag init -g cmd/frontend/main.go -o cmd/frontend/docs \
+		--parseDependency --parseInternal \
+		--instanceName frontend \
+		--exclude internal/api/handler/backendHandler
+	@rm -f cmd/frontend/docs/docs.go cmd/frontend/docs/swagger.json cmd/frontend/docs/swagger.yaml
+	@echo "✅ 前台文档生成完成"
 
 swag-backend: ## 生成后台 Swagger 文档
-	swag init -g cmd/backend/main.go -o cmd/backend/docs --parseDependency --parseInternal
+	@echo "🔄 生成后台 Swagger 文档（排除前台 handler）..."
+	@swag init -g cmd/backend/main.go -o cmd/backend/docs \
+		--parseDependency --parseInternal \
+		--instanceName backend \
+		--exclude internal/api/handler/frontendhandler
+	@rm -f cmd/backend/docs/docs.go cmd/backend/docs/swagger.json cmd/backend/docs/swagger.yaml
+	@echo "✅ 后台文档生成完成"
 
 swag: swag-frontend swag-backend ## 生成所有 Swagger 文档
-	@echo "✅ Swagger 文档生成完成"
+	@echo "✅ 所有 Swagger 文档生成完成"
 
 .DEFAULT_GOAL := help

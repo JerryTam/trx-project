@@ -19,15 +19,15 @@ type Metrics struct {
 	UserLoginFailures *prometheus.CounterVec
 
 	// 数据库指标
-	DBConnections     prometheus.Gauge
-	DBQueriesTotal    *prometheus.CounterVec
-	DBQueryDuration   *prometheus.HistogramVec
+	DBConnections      prometheus.Gauge
+	DBQueriesTotal     *prometheus.CounterVec
+	DBQueryDuration    *prometheus.HistogramVec
 	DBConnectionErrors *prometheus.CounterVec
 
 	// Redis 指标
-	RedisOperationsTotal *prometheus.CounterVec
+	RedisOperationsTotal   *prometheus.CounterVec
 	RedisOperationDuration *prometheus.HistogramVec
-	RedisConnectionErrors *prometheus.CounterVec
+	RedisConnectionErrors  *prometheus.CounterVec
 
 	// RBAC 权限检查指标
 	RBACPermissionChecks *prometheus.CounterVec
@@ -204,4 +204,3 @@ func NewMetrics(namespace string) *Metrics {
 
 	return m
 }
-

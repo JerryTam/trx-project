@@ -1,7 +1,8 @@
-package handler
+package frontendHandler
 
 import (
 	"strconv"
+	_ "trx-project/internal/model" // 用于 Swagger 文档生成
 	"trx-project/internal/service"
 	"trx-project/pkg/response"
 
@@ -36,17 +37,18 @@ type LoginRequest struct {
 }
 
 // Register 用户注册
-// @Summary 用户注册
-// @Description 创建新用户账号，注册成功后返回用户信息和 JWT Token
-// @Tags 公开接口
-// @Accept json
-// @Produce json
-// @Param request body RegisterRequest true "注册信息"
-// @Success 201 {object} response.Response{data=map[string]interface{}} "注册成功，返回用户信息和 Token"
-// @Failure 400 {object} response.Response "请求参数错误"
-// @Failure 409 {object} response.Response "用户名或邮箱已存在"
-// @Failure 500 {object} response.Response "服务器内部错误"
-// @Router /public/register [post]
+//
+//	@Summary		用户注册
+//	@Description	创建新用户账号，注册成功后返回用户信息和 JWT Token
+//	@Tags			公开接口
+//	@Accept			json
+//	@Produce		json
+//	@Param			request	body		RegisterRequest									true	"注册信息"
+//	@Success		201		{object}	response.Response{data=map[string]interface{}}	"注册成功，返回用户信息和 Token"
+//	@Failure		400		{object}	response.Response								"请求参数错误"
+//	@Failure		409		{object}	response.Response								"用户名或邮箱已存在"
+//	@Failure		500		{object}	response.Response								"服务器内部错误"
+//	@Router			/public/register [post]
 func (h *UserHandler) Register(c *gin.Context) {
 	var req RegisterRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -77,18 +79,19 @@ func (h *UserHandler) Register(c *gin.Context) {
 }
 
 // Login 用户登录
-// @Summary 用户登录
-// @Description 使用用户名和密码登录，成功后返回用户信息和 JWT Token
-// @Tags 公开接口
-// @Accept json
-// @Produce json
-// @Param request body LoginRequest true "登录信息"
-// @Success 200 {object} response.Response{data=map[string]interface{}} "登录成功，返回用户信息和 Token"
-// @Failure 400 {object} response.Response "请求参数错误"
-// @Failure 401 {object} response.Response "用户名或密码错误"
-// @Failure 403 {object} response.Response "账号已被禁用"
-// @Failure 500 {object} response.Response "服务器内部错误"
-// @Router /public/login [post]
+//
+//	@Summary		用户登录
+//	@Description	使用用户名和密码登录，成功后返回用户信息和 JWT Token
+//	@Tags			公开接口
+//	@Accept			json
+//	@Produce		json
+//	@Param			request	body		LoginRequest									true	"登录信息"
+//	@Success		200		{object}	response.Response{data=map[string]interface{}}	"登录成功，返回用户信息和 Token"
+//	@Failure		400		{object}	response.Response								"请求参数错误"
+//	@Failure		401		{object}	response.Response								"用户名或密码错误"
+//	@Failure		403		{object}	response.Response								"账号已被禁用"
+//	@Failure		500		{object}	response.Response								"服务器内部错误"
+//	@Router			/public/login [post]
 func (h *UserHandler) Login(c *gin.Context) {
 	var req LoginRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -119,20 +122,21 @@ func (h *UserHandler) Login(c *gin.Context) {
 }
 
 // GetUser 获取用户信息
-// @Summary 获取用户信息（前台）
-// @Description 根据用户ID获取用户信息，用户只能查看自己的信息
-// @Tags 用户接口
-// @Accept json
-// @Produce json
-// @Security BearerAuth
-// @Param id path int true "用户ID"
-// @Success 200 {object} response.Response{data=model.User} "成功获取用户信息"
-// @Failure 400 {object} response.Response "无效的用户ID"
-// @Failure 401 {object} response.Response "未授权"
-// @Failure 403 {object} response.Response "无权访问"
-// @Failure 404 {object} response.Response "用户不存在"
-// @Failure 500 {object} response.Response "服务器内部错误"
-// @Router /users/{id} [get]
+//
+//	@Summary		获取用户信息（前台）
+//	@Description	根据用户ID获取用户信息，用户只能查看自己的信息
+//	@Tags			用户接口
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			id	path		int									true	"用户ID"
+//	@Success		200	{object}	response.Response{data=model.User}	"成功获取用户信息"
+//	@Failure		400	{object}	response.Response					"无效的用户ID"
+//	@Failure		401	{object}	response.Response					"未授权"
+//	@Failure		403	{object}	response.Response					"无权访问"
+//	@Failure		404	{object}	response.Response					"用户不存在"
+//	@Failure		500	{object}	response.Response					"服务器内部错误"
+//	@Router			/users/{id} [get]
 func (h *UserHandler) GetUser(c *gin.Context) {
 	idStr := c.Param("id")
 	id, err := strconv.ParseUint(idStr, 10, 32)
@@ -164,17 +168,18 @@ func (h *UserHandler) GetUser(c *gin.Context) {
 }
 
 // GetProfile 获取个人信息
-// @Summary 获取当前登录用户的个人信息
-// @Description 获取当前登录用户的详细信息
-// @Tags 用户接口
-// @Accept json
-// @Produce json
-// @Security BearerAuth
-// @Success 200 {object} response.Response{data=model.User} "成功获取个人信息"
-// @Failure 401 {object} response.Response "未授权或Token无效"
-// @Failure 404 {object} response.Response "用户不存在"
-// @Failure 500 {object} response.Response "服务器内部错误"
-// @Router /user/profile [get]
+//
+//	@Summary		获取当前登录用户的个人信息
+//	@Description	获取当前登录用户的详细信息
+//	@Tags			用户接口
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Success		200	{object}	response.Response{data=model.User}	"成功获取个人信息"
+//	@Failure		401	{object}	response.Response					"未授权或Token无效"
+//	@Failure		404	{object}	response.Response					"用户不存在"
+//	@Failure		500	{object}	response.Response					"服务器内部错误"
+//	@Router			/user/profile [get]
 func (h *UserHandler) GetProfile(c *gin.Context) {
 	// TODO: 从认证中间件获取当前用户 ID
 	// userID, exists := middleware.GetUserID(c)
@@ -206,18 +211,19 @@ func (h *UserHandler) GetProfile(c *gin.Context) {
 }
 
 // UpdateProfile 更新个人信息
-// @Summary 更新当前登录用户的个人信息
-// @Description 更新当前登录用户的个人信息（如邮箱等）
-// @Tags 用户接口
-// @Accept json
-// @Produce json
-// @Security BearerAuth
-// @Param request body object{email=string} true "更新信息"
-// @Success 200 {object} response.Response "更新成功"
-// @Failure 400 {object} response.Response "请求参数错误"
-// @Failure 401 {object} response.Response "未授权或Token无效"
-// @Failure 500 {object} response.Response "服务器内部错误"
-// @Router /user/profile [put]
+//
+//	@Summary		更新当前登录用户的个人信息
+//	@Description	更新当前登录用户的个人信息（如邮箱等）
+//	@Tags			用户接口
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			request	body		object{email=string}	true	"更新信息"
+//	@Success		200		{object}	response.Response		"更新成功"
+//	@Failure		400		{object}	response.Response		"请求参数错误"
+//	@Failure		401		{object}	response.Response		"未授权或Token无效"
+//	@Failure		500		{object}	response.Response		"服务器内部错误"
+//	@Router			/user/profile [put]
 func (h *UserHandler) UpdateProfile(c *gin.Context) {
 	// TODO: 从认证中间件获取当前用户 ID
 	// userID, exists := middleware.GetUserID(c)
@@ -240,19 +246,20 @@ func (h *UserHandler) UpdateProfile(c *gin.Context) {
 }
 
 // ListUsers 获取用户列表
-// @Summary 获取用户列表
-// @Description 分页获取用户列表（需要认证）
-// @Tags 用户接口
-// @Accept json
-// @Produce json
-// @Security BearerAuth
-// @Param page query int false "页码，默认1" default(1)
-// @Param page_size query int false "每页数量，默认10" default(10)
-// @Success 200 {object} response.Response{data=map[string]interface{}} "成功获取用户列表"
-// @Failure 400 {object} response.Response "请求参数错误"
-// @Failure 401 {object} response.Response "未授权"
-// @Failure 500 {object} response.Response "服务器内部错误"
-// @Router /users [get]
+//
+//	@Summary		获取用户列表
+//	@Description	分页获取用户列表（需要认证）
+//	@Tags			用户接口
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			page		query		int												false	"页码，默认1"	default(1)
+//	@Param			page_size	query		int												false	"每页数量，默认10"	default(10)
+//	@Success		200			{object}	response.Response{data=map[string]interface{}}	"成功获取用户列表"
+//	@Failure		400			{object}	response.Response								"请求参数错误"
+//	@Failure		401			{object}	response.Response								"未授权"
+//	@Failure		500			{object}	response.Response								"服务器内部错误"
+//	@Router			/users [get]
 func (h *UserHandler) ListUsers(c *gin.Context) {
 	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
 	pageSize, _ := strconv.Atoi(c.DefaultQuery("page_size", "10"))
@@ -284,4 +291,3 @@ func (h *UserHandler) DeleteUser(c *gin.Context) {
 
 	response.SuccessWithMsg(c, "User deleted successfully", nil)
 }
-

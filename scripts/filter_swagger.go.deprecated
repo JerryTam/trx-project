@@ -1,0 +1,78 @@
+package main
+
+import (
+	"encoding/json"
+	"fmt"
+	"os"
+	"strings"
+)
+
+func main() {
+	if len(os.Args) < 4 {
+		fmt.Println("Usage: go run filter_swagger.go <input-file> <output-file> <exclude-prefix1> [exclude-prefix2...]")
+		fmt.Println("Example: go run filter_swagger.go swagger.json filtered.json admin users")
+		os.Exit(1)
+	}
+
+	inputFile := os.Args[1]
+	outputFile := os.Args[2]
+	excludePrefixes := []string{}
+	
+	// 处理多个排除前缀
+	for i := 3; i < len(os.Args); i++ {
+		prefix := os.Args[i]
+		// 确保前缀以 / 开头
+		if !strings.HasPrefix(prefix, "/") {
+			prefix = "/" + prefix
+		}
+		excludePrefixes = append(excludePrefixes, prefix)
+	}
+
+	// 读取 JSON 文件
+	data, err := os.ReadFile(inputFile)
+	if err != nil {
+		fmt.Printf("Error reading file: %v\n", err)
+		os.Exit(1)
+	}
+
+	// 解析 JSON
+	var swagger map[string]interface{}
+	if err := json.Unmarshal(data, &swagger); err != nil {
+		fmt.Printf("Error parsing JSON: %v\n", err)
+		os.Exit(1)
+	}
+
+	// 过滤 paths
+	filteredCount := 0
+	if paths, ok := swagger["paths"].(map[string]interface{}); ok {
+		for path := range paths {
+			shouldDelete := false
+			for _, prefix := range excludePrefixes {
+				if strings.HasPrefix(path, prefix) {
+					shouldDelete = true
+					break
+				}
+			}
+			if shouldDelete {
+				delete(paths, path)
+				filteredCount++
+			}
+		}
+	}
+	fmt.Printf("📊 Filtered %d paths with prefixes %v\n", filteredCount, excludePrefixes)
+
+	// 写入新文件
+	output, err := json.MarshalIndent(swagger, "", "    ")
+	if err != nil {
+		fmt.Printf("Error marshaling JSON: %v\n", err)
+		os.Exit(1)
+	}
+
+	if err := os.WriteFile(outputFile, output, 0644); err != nil {
+		fmt.Printf("Error writing file: %v\n", err)
+		os.Exit(1)
+	}
+
+	fmt.Printf("✅ Filtered swagger file created: %s\n", outputFile)
+}
+

@@ -36,4 +36,3 @@ func main() {
 	fmt.Printf("  export ADMIN_TOKEN=\"%s\"\n", token)
 	fmt.Println("  curl -H \"Authorization: Bearer $ADMIN_TOKEN\" http://localhost:8081/api/v1/admin/users")
 }
-

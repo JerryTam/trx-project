@@ -40,10 +40,10 @@ type RBACService interface {
 }
 
 type rbacService struct {
-	repo      repository.RBACRepository
-	cache     *cache.RBACCache
-	logger    *zap.Logger
-	enableCache bool  // 是否启用缓存
+	repo        repository.RBACRepository
+	cache       *cache.RBACCache
+	logger      *zap.Logger
+	enableCache bool // 是否启用缓存
 }
 
 // NewRBACService 创建 RBAC 服务
@@ -52,7 +52,7 @@ func NewRBACService(repo repository.RBACRepository, rbacCache *cache.RBACCache, 
 		repo:        repo,
 		cache:       rbacCache,
 		logger:      logger,
-		enableCache: rbacCache != nil,  // 如果提供了缓存，则启用
+		enableCache: rbacCache != nil, // 如果提供了缓存，则启用
 	}
 }
 
@@ -80,7 +80,7 @@ func (s *rbacService) CreateRole(ctx context.Context, role *model.Role) error {
 	if err == nil && existingRole.ID > 0 {
 		return errors.New("role name already exists")
 	}
-	
+
 	return s.repo.CreateRole(ctx, role)
 }
 
@@ -109,7 +109,7 @@ func (s *rbacService) AssignPermissionsToRole(ctx context.Context, roleID uint, 
 	if err != nil {
 		return err
 	}
-	
+
 	// 使角色权限缓存失效
 	if s.enableCache {
 		if err := s.cache.InvalidateRoleCache(ctx, roleID); err != nil {
@@ -118,7 +118,7 @@ func (s *rbacService) AssignPermissionsToRole(ctx context.Context, roleID uint, 
 				zap.Error(err))
 		}
 	}
-	
+
 	return nil
 }
 
@@ -127,7 +127,7 @@ func (s *rbacService) RemovePermissionsFromRole(ctx context.Context, roleID uint
 	if err != nil {
 		return err
 	}
-	
+
 	// 使角色权限缓存失效
 	if s.enableCache {
 		if err := s.cache.InvalidateRoleCache(ctx, roleID); err != nil {
@@ -136,7 +136,7 @@ func (s *rbacService) RemovePermissionsFromRole(ctx context.Context, roleID uint
 				zap.Error(err))
 		}
 	}
-	
+
 	return nil
 }
 
@@ -152,13 +152,13 @@ func (s *rbacService) GetRolePermissions(ctx context.Context, roleID uint) ([]*m
 			return permissions, nil
 		}
 	}
-	
+
 	// 缓存未命中，从数据库获取
 	permissions, err := s.repo.GetRolePermissions(ctx, roleID)
 	if err != nil {
 		return nil, err
 	}
-	
+
 	// 存入缓存
 	if s.enableCache && len(permissions) > 0 {
 		permissionCodes := make([]string, 0, len(permissions))
@@ -171,7 +171,7 @@ func (s *rbacService) GetRolePermissions(ctx context.Context, roleID uint) ([]*m
 				zap.Error(err))
 		}
 	}
-	
+
 	return permissions, nil
 }
 
@@ -183,12 +183,12 @@ func (s *rbacService) AssignRoleToUser(ctx context.Context, userID, roleID uint)
 	if err != nil {
 		return errors.New("role not found")
 	}
-	
+
 	err = s.repo.AssignRoleToUser(ctx, userID, roleID)
 	if err != nil {
 		return err
 	}
-	
+
 	// 使用户缓存失效
 	if s.enableCache {
 		if err := s.cache.InvalidateUserCache(ctx, userID); err != nil {
@@ -197,7 +197,7 @@ func (s *rbacService) AssignRoleToUser(ctx context.Context, userID, roleID uint)
 				zap.Error(err))
 		}
 	}
-	
+
 	return nil
 }
 
@@ -206,7 +206,7 @@ func (s *rbacService) RemoveRoleFromUser(ctx context.Context, userID, roleID uin
 	if err != nil {
 		return err
 	}
-	
+
 	// 使用户缓存失效
 	if s.enableCache {
 		if err := s.cache.InvalidateUserCache(ctx, userID); err != nil {
@@ -215,7 +215,7 @@ func (s *rbacService) RemoveRoleFromUser(ctx context.Context, userID, roleID uin
 				zap.Error(err))
 		}
 	}
-	
+
 	return nil
 }
 
@@ -236,13 +236,13 @@ func (s *rbacService) GetUserPermissions(ctx context.Context, userID uint) ([]*m
 			return permissions, nil
 		}
 	}
-	
+
 	// 缓存未命中，从数据库获取
 	permissions, err := s.repo.GetUserPermissions(ctx, userID)
 	if err != nil {
 		return nil, err
 	}
-	
+
 	// 存入缓存
 	if s.enableCache && len(permissions) > 0 {
 		permissionCodes := make([]string, 0, len(permissions))
@@ -255,7 +255,7 @@ func (s *rbacService) GetUserPermissions(ctx context.Context, userID uint) ([]*m
 				zap.Error(err))
 		}
 	}
-	
+
 	return permissions, nil
 }
 
@@ -271,13 +271,13 @@ func (s *rbacService) HasPermission(ctx context.Context, userID uint, permission
 			return hasPermission, nil
 		}
 	}
-	
+
 	// 缓存未命中，从数据库查询
 	hasPermission, err := s.repo.HasPermission(ctx, userID, permissionCode)
 	if err != nil {
 		return false, err
 	}
-	
+
 	// 存入缓存
 	if s.enableCache {
 		if err := s.cache.SetPermissionCheck(ctx, userID, permissionCode, hasPermission); err != nil {
@@ -287,7 +287,7 @@ func (s *rbacService) HasPermission(ctx context.Context, userID uint, permission
 				zap.Error(err))
 		}
 	}
-	
+
 	return hasPermission, nil
 }
 
@@ -295,20 +295,19 @@ func (s *rbacService) HasPermission(ctx context.Context, userID uint, permission
 func (s *rbacService) CheckPermission(ctx context.Context, userID uint, permissionCode string) error {
 	has, err := s.repo.HasPermission(ctx, userID, permissionCode)
 	if err != nil {
-		s.logger.Error("Failed to check permission", 
-			zap.Uint("user_id", userID), 
+		s.logger.Error("Failed to check permission",
+			zap.Uint("user_id", userID),
 			zap.String("permission", permissionCode),
 			zap.Error(err))
 		return err
 	}
-	
+
 	if !has {
-		s.logger.Warn("Permission denied", 
-			zap.Uint("user_id", userID), 
+		s.logger.Warn("Permission denied",
+			zap.Uint("user_id", userID),
 			zap.String("permission", permissionCode))
 		return errors.New("permission denied")
 	}
-	
+
 	return nil
 }
-

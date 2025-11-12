@@ -62,9 +62,9 @@ func (p *Producer) Close() error {
 // NewConsumer creates a new Kafka consumer
 func NewConsumer(cfg *config.KafkaConfig, topic string, logger *zap.Logger) *Consumer {
 	reader := kafka.NewReader(kafka.ReaderConfig{
-		Brokers: cfg.Brokers,
-		GroupID: cfg.GroupID,
-		Topic:   topic,
+		Brokers:  cfg.Brokers,
+		GroupID:  cfg.GroupID,
+		Topic:    topic,
 		MinBytes: 10e3, // 10KB
 		MaxBytes: 10e6, // 10MB
 	})
@@ -95,4 +95,3 @@ func (c *Consumer) ReadMessage(ctx context.Context) (kafka.Message, error) {
 func (c *Consumer) Close() error {
 	return c.reader.Close()
 }
-

@@ -3,14 +3,14 @@ package middleware
 import (
 	"context"
 	"fmt"
-	"time"
+
+	"trx-project/pkg/response"
 
 	"github.com/gin-gonic/gin"
 	"github.com/redis/go-redis/v9"
 	"github.com/ulule/limiter/v3"
 	sredis "github.com/ulule/limiter/v3/drivers/store/redis"
 	"go.uber.org/zap"
-	"trx-project/internal/api/response"
 )
 
 // RateLimitConfig 限流配置
@@ -92,7 +92,7 @@ func (rl *RateLimiter) GlobalRateLimit(rateString string) gin.HandlerFunc {
 			rl.logger.Warn("Global rate limit exceeded",
 				zap.String("path", c.Request.URL.Path))
 
-			response.BusinessError(c, response.CodeTooManyRequests, 
+			response.BusinessError(c, response.CodeTooManyRequests,
 				fmt.Sprintf("全局请求限流，请 %d 秒后重试", limiterContext.Reset))
 			c.Abort()
 			return
@@ -310,8 +310,8 @@ func (rl *RateLimiter) checkRateLimit(c *gin.Context, limitType, key, rateString
 	if *store == nil {
 		s, err := rl.initStore(prefix)
 		if err != nil {
-			rl.logger.Error("Failed to init rate limit store", 
-				zap.String("type", limitType), 
+			rl.logger.Error("Failed to init rate limit store",
+				zap.String("type", limitType),
 				zap.Error(err))
 			return true
 		}
@@ -320,9 +320,9 @@ func (rl *RateLimiter) checkRateLimit(c *gin.Context, limitType, key, rateString
 
 	rate, err := limiter.NewRateFromFormatted(rateString)
 	if err != nil {
-		rl.logger.Error("Invalid rate format", 
+		rl.logger.Error("Invalid rate format",
 			zap.String("type", limitType),
-			zap.String("rate", rateString), 
+			zap.String("rate", rateString),
 			zap.Error(err))
 		return true
 	}
@@ -332,7 +332,7 @@ func (rl *RateLimiter) checkRateLimit(c *gin.Context, limitType, key, rateString
 	limiterContext, err := limiterInstance.Get(ctx, key)
 
 	if err != nil {
-		rl.logger.Error("Failed to get rate limit context", 
+		rl.logger.Error("Failed to get rate limit context",
 			zap.String("type", limitType),
 			zap.Error(err))
 		return true
@@ -356,4 +356,3 @@ func (rl *RateLimiter) checkRateLimit(c *gin.Context, limitType, key, rateString
 
 	return true
 }
-

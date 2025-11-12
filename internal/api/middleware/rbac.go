@@ -122,4 +122,3 @@ func RequireAllPermissions(permissionCodes []string, rbacService service.RBACSer
 		c.Next()
 	}
 }
-

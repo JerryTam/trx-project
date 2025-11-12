@@ -7,20 +7,15 @@
 package main
 
 import (
-	"github.com/gin-gonic/gin"
-	"github.com/redis/go-redis/v9"
-	"go.uber.org/zap"
-	"gorm.io/gorm"
-	"time"
-	"trx-project/internal/api/handler"
-	"trx-project/internal/api/router"
+	"trx-project/internal/api/handler/backendHandler"
 	"trx-project/internal/repository"
 	"trx-project/internal/service"
 	"trx-project/pkg/cache"
 	"trx-project/pkg/config"
-	"trx-project/pkg/database"
-	"trx-project/pkg/jwt"
-	"trx-project/pkg/logger"
+
+	"github.com/gin-gonic/gin"
+
+	_ "trx-project/cmd/backend/docs"
 )
 
 // Injectors from wire.go:
@@ -42,59 +37,12 @@ func initBackendApp(cfg *config.Config) (*gin.Engine, func(), error) {
 	}
 	jwtConfig := provideAdminJWTConfig(cfg)
 	userService := service.NewUserService(userRepository, client, logger, jwtConfig)
-	adminUserHandler := handler.NewAdminUserHandler(userService, logger)
+	adminUserHandler := backendHandler.NewAdminUserHandler(userService, logger)
 	rbacRepository := repository.NewRBACRepository(db)
 	rbacCache := cache.NewRBACCache(client, logger)
 	rbacService := service.NewRBACService(rbacRepository, rbacCache, logger)
-	rbacHandler := handler.NewRBACHandler(rbacService, logger)
+	rbacHandler := backendHandler.NewRBACHandler(rbacService, logger)
 	engine := provideBackendRouter(adminUserHandler, rbacHandler, rbacService, client, logger, cfg)
 	return engine, func() {
 	}, nil
-}
-
-// wire.go:
-
-// initLogger initializes logger for output
-func initLogger(cfg *config.Config) (*zap.Logger, error) {
-	return provideLogger(cfg)
-}
-
-func provideLogger(cfg *config.Config) (*zap.Logger, error) {
-	if err := logger.InitLogger(&cfg.Logger); err != nil {
-		return nil, err
-	}
-	return logger.Logger, nil
-}
-
-func provideDB(cfg *config.Config, logger2 *zap.Logger) (*gorm.DB, error) {
-	return database.InitMySQL(&cfg.Database.MySQL, logger2)
-}
-
-func provideRedis(cfg *config.Config, logger2 *zap.Logger) (*redis.Client, error) {
-	return cache.InitRedis(&cfg.Redis, logger2)
-}
-
-func provideAdminJWTConfig(cfg *config.Config) jwt.Config {
-	return jwt.Config{
-		Secret:     cfg.JWT.Secret,
-		Issuer:     cfg.JWT.Issuer,
-		ExpireTime: time.Duration(cfg.JWT.AdminExpireHours) * time.Hour,
-	}
-}
-
-func provideBackendRouter(
-	adminUserHandler *handler.AdminUserHandler,
-	rbacHandler *handler.RBACHandler,
-	rbacService service.RBACService,
-	redisClient *redis.Client, logger2 *zap.Logger,
-	cfg *config.Config,
-) *gin.Engine {
-	return router.SetupBackend(
-		adminUserHandler,
-		rbacHandler,
-		rbacService,
-		cfg.JWT.Secret,
-		redisClient,
-		cfg, logger2, cfg.Server.Mode,
-	)
 }

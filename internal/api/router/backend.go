@@ -1,11 +1,13 @@
 package router
 
 import (
-	"trx-project/internal/api/handler"
+	"trx-project/internal/api/handler/backendHandler"
 	"trx-project/internal/api/middleware"
 	"trx-project/internal/service"
 	"trx-project/pkg/config"
 	"trx-project/pkg/metrics"
+
+	_ "trx-project/cmd/backend/docs" // Swagger 文档
 
 	"github.com/gin-gonic/gin"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -18,8 +20,8 @@ import (
 
 // SetupBackend 设置后端路由器
 func SetupBackend(
-	adminUserHandler *handler.AdminUserHandler,
-	rbacHandler *handler.RBACHandler,
+	adminUserHandler *backendHandler.AdminUserHandler,
+	rbacHandler *backendHandler.RBACHandler,
 	rbacService service.RBACService,
 	jwtSecret string,
 	redisClient *redis.Client,
@@ -80,7 +82,8 @@ func SetupBackend(
 	r.GET("/metrics", gin.WrapH(promhttp.Handler()))
 
 	// Swagger 文档
-	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler,
+		ginSwagger.InstanceName("backend")))
 
 	// API v1 路由
 	v1 := r.Group("/api/v1")
@@ -133,13 +136,13 @@ func SetupBackend(
 					adminUserHandler.DeleteUser)
 
 				// 用户角色管理（需要 rbac:manage 权限）
-				adminUsers.POST("/:user_id/role",
+				adminUsers.POST("/:id/role",
 					middleware.RequirePermission("rbac:manage", rbacService, logger),
 					rbacHandler.AssignRoleToUser)
-				adminUsers.GET("/:user_id/roles",
+				adminUsers.GET("/:id/roles",
 					middleware.RequirePermission("rbac:manage", rbacService, logger),
 					rbacHandler.GetUserRoles)
-				adminUsers.GET("/:user_id/permissions",
+				adminUsers.GET("/:id/permissions",
 					middleware.RequirePermission("rbac:manage", rbacService, logger),
 					rbacHandler.GetUserPermissions)
 			}

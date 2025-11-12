@@ -3,13 +3,14 @@ package response
 // 业务状态码定义
 const (
 	// 通用状态码
-	CodeSuccess       = 200   // 成功
-	CodeBadRequest    = 400   // 错误的请求
-	CodeUnauthorized  = 401   // 未授权
-	CodeForbidden     = 403   // 禁止访问
-	CodeNotFound      = 404   // 未找到
-	CodeInternalError = 500   // 内部错误
-	CodeValidateError = 10001 // 参数验证错误
+	CodeSuccess         = 200   // 成功
+	CodeBadRequest      = 400   // 错误的请求
+	CodeUnauthorized    = 401   // 未授权
+	CodeForbidden       = 403   // 禁止访问
+	CodeNotFound        = 404   // 未找到
+	CodeTooManyRequests = 429   // 请求过多（限流）
+	CodeInternalError   = 500   // 内部错误
+	CodeValidateError   = 10001 // 参数验证错误
 
 	// 用户相关 (20xxx)
 	CodeUserNotFound       = 20001 // 用户不存在
@@ -21,7 +22,7 @@ const (
 	CodeUserPermissionDeny = 20007 // 权限不足
 
 	// 数据库相关 (30xxx)
-	CodeDatabaseError = 30001 // 数据库错误
+	CodeDatabaseError  = 30001 // 数据库错误
 	CodeRecordNotFound = 30002 // 记录不存在
 	CodeRecordExists   = 30003 // 记录已存在
 
@@ -37,13 +38,14 @@ const (
 
 // CodeMessage 状态码对应的默认消息
 var CodeMessage = map[int]string{
-	CodeSuccess:       "success",
-	CodeBadRequest:    "bad request",
-	CodeUnauthorized:  "unauthorized",
-	CodeForbidden:     "forbidden",
-	CodeNotFound:      "not found",
-	CodeInternalError: "internal server error",
-	CodeValidateError: "validate error",
+	CodeSuccess:         "success",
+	CodeBadRequest:      "bad request",
+	CodeUnauthorized:    "unauthorized",
+	CodeForbidden:       "forbidden",
+	CodeNotFound:        "not found",
+	CodeTooManyRequests: "too many requests",
+	CodeInternalError:   "internal server error",
+	CodeValidateError:   "validate error",
 
 	CodeUserNotFound:       "user not found",
 	CodeUserAlreadyExists:  "user already exists",
@@ -70,4 +72,3 @@ func GetMessage(code int) string {
 	}
 	return "unknown error"
 }
-

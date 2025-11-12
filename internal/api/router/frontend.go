@@ -1,10 +1,12 @@
 package router
 
 import (
-	"trx-project/internal/api/handler"
+	"trx-project/internal/api/handler/frontendHandler"
 	"trx-project/internal/api/middleware"
 	"trx-project/pkg/config"
 	"trx-project/pkg/metrics"
+
+	_ "trx-project/cmd/frontend/docs" // Swagger 文档
 
 	"github.com/gin-gonic/gin"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -17,7 +19,7 @@ import (
 
 // SetupFrontend 设置前端路由器
 func SetupFrontend(
-	userHandler *handler.UserHandler,
+	userHandler *frontendHandler.UserHandler,
 	jwtSecret string,
 	redisClient *redis.Client,
 	cfg *config.Config,
@@ -35,16 +37,16 @@ func SetupFrontend(
 	// 应用全局中间件
 	// 顺序很重要：Recovery → OpenTelemetry → RequestID → Prometheus → Logger → CORS
 	r.Use(middleware.Recovery(logger))
-	
+
 	// OpenTelemetry 链路追踪
 	if cfg.Tracing.Enabled {
 		r.Use(otelgin.Middleware(cfg.Tracing.ServiceName))
 		logger.Info("OpenTelemetry tracing enabled for frontend")
 	}
-	
-	r.Use(middleware.RequestID(logger))         // 请求 ID 追踪
+
+	r.Use(middleware.RequestID(logger))                   // 请求 ID 追踪
 	r.Use(middleware.PrometheusMiddleware(m, "frontend")) // Prometheus 监控
-	r.Use(middleware.Logger(logger))            // 日志记录（会包含请求 ID）
+	r.Use(middleware.Logger(logger))                      // 日志记录（会包含请求 ID）
 	r.Use(middleware.CORS())
 
 	// 限流中间件
@@ -77,7 +79,8 @@ func SetupFrontend(
 	r.GET("/metrics", gin.WrapH(promhttp.Handler()))
 
 	// Swagger 文档
-	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler,
+		ginSwagger.InstanceName("frontend")))
 
 	// API v1 路由
 	v1 := r.Group("/api/v1")

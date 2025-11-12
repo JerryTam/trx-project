@@ -77,4 +77,3 @@ func RequestIDToLogger(c *gin.Context, logger *zap.Logger) *zap.Logger {
 	}
 	return logger
 }
-

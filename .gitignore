@@ -46,4 +46,7 @@ config/config.yaml
 # Temporary files
 tmp/
 temp/
+*.txt
+*.exe
+!scripts/*.exe
 

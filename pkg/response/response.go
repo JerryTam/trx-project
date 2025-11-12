@@ -8,9 +8,9 @@ import (
 
 // Response 统一响应结构
 type Response struct {
-	Code    int         `json:"code"`              // 业务状态码
-	Message string      `json:"message"`           // 消息
-	Data    interface{} `json:"data,omitempty"`    // 数据
+	Code    int         `json:"code"`               // 业务状态码
+	Message string      `json:"message"`            // 消息
+	Data    interface{} `json:"data,omitempty"`     // 数据
 	TraceID string      `json:"trace_id,omitempty"` // 追踪ID（可选）
 }
 
@@ -135,4 +135,3 @@ func BusinessError(c *gin.Context, code int, message string) {
 		Message: message,
 	})
 }
-

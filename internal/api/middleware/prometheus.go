@@ -37,4 +37,3 @@ func PrometheusMiddleware(m *metrics.Metrics, serviceName string) gin.HandlerFun
 		m.HTTPResponseSize.WithLabelValues(serviceName, method, path).Observe(float64(c.Writer.Size()))
 	}
 }
-

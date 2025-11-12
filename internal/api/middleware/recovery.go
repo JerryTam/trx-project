@@ -28,4 +28,3 @@ func Recovery(logger *zap.Logger) gin.HandlerFunc {
 		c.Next()
 	}
 }
-

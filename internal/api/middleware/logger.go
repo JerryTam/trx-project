@@ -53,4 +53,3 @@ func Logger(logger *zap.Logger) gin.HandlerFunc {
 		}
 	}
 }
-

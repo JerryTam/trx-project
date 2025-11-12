@@ -7,20 +7,14 @@
 package main
 
 import (
-	"github.com/gin-gonic/gin"
-	"github.com/redis/go-redis/v9"
-	"go.uber.org/zap"
-	"gorm.io/gorm"
-	"time"
-	"trx-project/internal/api/handler"
-	"trx-project/internal/api/router"
+	"trx-project/internal/api/handler/frontendHandler"
 	"trx-project/internal/repository"
 	"trx-project/internal/service"
-	"trx-project/pkg/cache"
 	"trx-project/pkg/config"
-	"trx-project/pkg/database"
-	"trx-project/pkg/jwt"
-	"trx-project/pkg/logger"
+
+	"github.com/gin-gonic/gin"
+
+	_ "trx-project/cmd/frontend/docs"
 )
 
 // Injectors from wire.go:
@@ -42,59 +36,8 @@ func initFrontendApp(cfg *config.Config) (*gin.Engine, func(), error) {
 	}
 	jwtConfig := provideJWTConfig(cfg)
 	userService := service.NewUserService(userRepository, client, logger, jwtConfig)
-	userHandler := handler.NewUserHandler(userService, logger)
+	userHandler := frontendHandler.NewUserHandler(userService, logger)
 	engine := provideFrontendRouter(userHandler, client, logger, cfg)
 	return engine, func() {
 	}, nil
-}
-
-// wire.go:
-
-// initDatabaseAndLogger initializes database and logger for migration
-func initDatabaseAndLogger(cfg *config.Config) (*gorm.DB, *zap.Logger, error) {
-	zapLogger, err := provideLogger(cfg)
-	if err != nil {
-		return nil, nil, err
-	}
-	db, err := provideDB(cfg, zapLogger)
-	if err != nil {
-		return nil, nil, err
-	}
-	return db, zapLogger, nil
-}
-
-func provideLogger(cfg *config.Config) (*zap.Logger, error) {
-	if err := logger.InitLogger(&cfg.Logger); err != nil {
-		return nil, err
-	}
-	return logger.Logger, nil
-}
-
-func provideDB(cfg *config.Config, logger2 *zap.Logger) (*gorm.DB, error) {
-	return database.InitMySQL(&cfg.Database.MySQL, logger2)
-}
-
-func provideRedis(cfg *config.Config, logger2 *zap.Logger) (*redis.Client, error) {
-	return cache.InitRedis(&cfg.Redis, logger2)
-}
-
-func provideJWTConfig(cfg *config.Config) jwt.Config {
-	return jwt.Config{
-		Secret:     cfg.JWT.Secret,
-		Issuer:     cfg.JWT.Issuer,
-		ExpireTime: time.Duration(cfg.JWT.ExpireHours) * time.Hour,
-	}
-}
-
-func provideFrontendRouter(
-	userHandler *handler.UserHandler,
-	redisClient *redis.Client, logger2 *zap.Logger,
-	cfg *config.Config,
-) *gin.Engine {
-	return router.SetupFrontend(
-		userHandler,
-		cfg.JWT.Secret,
-		redisClient,
-		cfg, logger2, cfg.Server.Mode,
-	)
 }

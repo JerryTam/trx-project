@@ -95,4 +95,3 @@ func ValidateToken(tokenString string, secret string) error {
 	_, err := ParseToken(tokenString, secret)
 	return err
 }
-

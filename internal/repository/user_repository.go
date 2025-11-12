@@ -79,4 +79,3 @@ func (r *userRepository) List(ctx context.Context, offset, limit int) ([]*model.
 
 	return users, total, nil
 }
-

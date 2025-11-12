@@ -33,4 +33,3 @@ func InitRedis(cfg *config.RedisConfig, logger *zap.Logger) (*redis.Client, erro
 func CloseRedis(client *redis.Client) error {
 	return client.Close()
 }
-

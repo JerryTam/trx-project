@@ -93,21 +93,21 @@ type TracingConfig struct {
 func Load(path string) (*Config, error) {
 	// 获取环境配置
 	env := GetEnv()
-	
+
 	// 如果 path 为空，使用默认路径
 	if path == "" {
 		path = "config/config.yaml"
 	}
-	
+
 	// 构建环境特定的配置文件路径
 	dir := filepath.Dir(path)
 	ext := filepath.Ext(path)
 	base := filepath.Base(path)
 	nameWithoutExt := base[:len(base)-len(ext)]
-	
+
 	// 尝试加载环境特定配置文件，如 config.dev.yaml
 	envConfigPath := filepath.Join(dir, fmt.Sprintf("%s.%s%s", nameWithoutExt, env, ext))
-	
+
 	// 如果环境配置文件存在，使用它；否则使用默认配置文件
 	configPath := path
 	if _, err := os.Stat(envConfigPath); err == nil {
@@ -116,7 +116,7 @@ func Load(path string) (*Config, error) {
 	} else {
 		fmt.Printf("⚠️  环境配置文件不存在 (%s)，使用默认配置: %s\n", envConfigPath, path)
 	}
-	
+
 	data, err := os.ReadFile(configPath)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read config file: %w", err)
@@ -153,4 +153,3 @@ func (m *MySQLConfig) GetDSN() string {
 func (r *RedisConfig) GetAddress() string {
 	return fmt.Sprintf("%s:%d", r.Host, r.Port)
 }
-

@@ -13,6 +13,8 @@ import (
 	"trx-project/pkg/migrate"
 	"trx-project/pkg/tracing"
 
+	_ "trx-project/cmd/backend/docs" // Swagger 文档
+
 	"go.uber.org/zap"
 )
 

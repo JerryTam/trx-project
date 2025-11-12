@@ -4,7 +4,9 @@ import (
 	"context"
 	"errors"
 	"testing"
+	"time"
 	"trx-project/internal/model"
+	"trx-project/pkg/jwt"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -12,7 +14,7 @@ import (
 	"gorm.io/gorm"
 )
 
-// MockUserRepository is a mock implementation of UserRepository
+// MockUserRepository 是 UserRepository 的 mock 实现
 type MockUserRepository struct {
 	mock.Mock
 }
@@ -62,107 +64,127 @@ func (m *MockUserRepository) List(ctx context.Context, offset, limit int) ([]*mo
 }
 
 func TestUserService_Register(t *testing.T) {
-	// Setup
+	// 配置
 	mockRepo := new(MockUserRepository)
 	logger, _ := zap.NewDevelopment()
-	service := NewUserService(mockRepo, nil, logger)
+	jwtConfig := jwt.Config{
+		Secret:     "test-secret",
+		Issuer:     "test",
+		ExpireTime: 24 * time.Hour,
+	}
+	service := NewUserService(mockRepo, nil, logger, jwtConfig)
 
 	ctx := context.Background()
 	username := "testuser"
 	email := "test@example.com"
 	password := "password123"
 
-	// Test case 1: Successful registration
+	// 测试用例 1: 成功注册
 	t.Run("Successful registration", func(t *testing.T) {
 		mockRepo.On("GetByUsername", ctx, username).Return(nil, gorm.ErrRecordNotFound).Once()
 		mockRepo.On("GetByEmail", ctx, email).Return(nil, gorm.ErrRecordNotFound).Once()
 		mockRepo.On("Create", ctx, mock.AnythingOfType("*model.User")).Return(nil).Once()
 
-		user, err := service.Register(ctx, username, email, password)
+		user, token, err := service.Register(ctx, username, email, password)
 
 		assert.NoError(t, err)
 		assert.NotNil(t, user)
+		assert.NotEmpty(t, token)
 		assert.Equal(t, username, user.Username)
 		assert.Equal(t, email, user.Email)
 		mockRepo.AssertExpectations(t)
 	})
 
-	// Test case 2: Username already exists
+	// 测试用例 2: 用户名已存在
 	t.Run("Username already exists", func(t *testing.T) {
 		existingUser := &model.User{Username: username}
 		mockRepo.On("GetByUsername", ctx, username).Return(existingUser, nil).Once()
 
-		user, err := service.Register(ctx, username, email, password)
+		user, token, err := service.Register(ctx, username, email, password)
 
 		assert.Error(t, err)
 		assert.Nil(t, user)
+		assert.Empty(t, token)
 		assert.Equal(t, "username already exists", err.Error())
 		mockRepo.AssertExpectations(t)
 	})
 
-	// Test case 3: Email already exists
+	// 测试用例 3: 邮箱已存在
 	t.Run("Email already exists", func(t *testing.T) {
 		existingUser := &model.User{Email: email}
 		mockRepo.On("GetByUsername", ctx, username).Return(nil, gorm.ErrRecordNotFound).Once()
 		mockRepo.On("GetByEmail", ctx, email).Return(existingUser, nil).Once()
 
-		user, err := service.Register(ctx, username, email, password)
+		user, token, err := service.Register(ctx, username, email, password)
 
 		assert.Error(t, err)
 		assert.Nil(t, user)
+		assert.Empty(t, token)
 		assert.Equal(t, "email already exists", err.Error())
 		mockRepo.AssertExpectations(t)
 	})
 
-	// Test case 4: Database error
+	// 测试用例 4: 数据库错误
 	t.Run("Database error", func(t *testing.T) {
 		dbError := errors.New("database error")
 		mockRepo.On("GetByUsername", ctx, username).Return(nil, gorm.ErrRecordNotFound).Once()
 		mockRepo.On("GetByEmail", ctx, email).Return(nil, gorm.ErrRecordNotFound).Once()
 		mockRepo.On("Create", ctx, mock.AnythingOfType("*model.User")).Return(dbError).Once()
 
-		user, err := service.Register(ctx, username, email, password)
+		user, token, err := service.Register(ctx, username, email, password)
 
 		assert.Error(t, err)
 		assert.Nil(t, user)
+		assert.Empty(t, token)
 		assert.Equal(t, dbError, err)
 		mockRepo.AssertExpectations(t)
 	})
 }
 
 func TestUserService_Login(t *testing.T) {
-	// Setup
+	// 配置
 	mockRepo := new(MockUserRepository)
 	logger, _ := zap.NewDevelopment()
-	service := NewUserService(mockRepo, nil, logger)
+	jwtConfig := jwt.Config{
+		Secret:     "test-secret",
+		Issuer:     "test",
+		ExpireTime: 24 * time.Hour,
+	}
+	service := NewUserService(mockRepo, nil, logger, jwtConfig)
 
 	ctx := context.Background()
 	username := "testuser"
 	password := "password123"
 
-	// Test case 1: User not found
+	// 测试用例 1: 用户不存在
 	t.Run("User not found", func(t *testing.T) {
 		mockRepo.On("GetByUsername", ctx, username).Return(nil, gorm.ErrRecordNotFound).Once()
 
-		user, err := service.Login(ctx, username, password)
+		user, token, err := service.Login(ctx, username, password)
 
 		assert.Error(t, err)
 		assert.Nil(t, user)
+		assert.Empty(t, token)
 		assert.Equal(t, "invalid username or password", err.Error())
 		mockRepo.AssertExpectations(t)
 	})
 }
 
 func TestUserService_GetUserByID(t *testing.T) {
-	// Setup
+	// 配置
 	mockRepo := new(MockUserRepository)
 	logger, _ := zap.NewDevelopment()
-	service := NewUserService(mockRepo, nil, logger)
+	jwtConfig := jwt.Config{
+		Secret:     "test-secret",
+		Issuer:     "test",
+		ExpireTime: 24 * time.Hour,
+	}
+	service := NewUserService(mockRepo, nil, logger, jwtConfig)
 
 	ctx := context.Background()
 	userID := uint(1)
 
-	// Test case 1: Successful retrieval
+	// 测试用例 1: 成功获取
 	t.Run("Successful retrieval", func(t *testing.T) {
 		expectedUser := &model.User{
 			ID:       userID,
@@ -179,7 +201,7 @@ func TestUserService_GetUserByID(t *testing.T) {
 		mockRepo.AssertExpectations(t)
 	})
 
-	// Test case 2: User not found
+	// 测试用例 2: 用户不存在
 	t.Run("User not found", func(t *testing.T) {
 		mockRepo.On("GetByID", ctx, userID).Return(nil, gorm.ErrRecordNotFound).Once()
 
@@ -193,14 +215,19 @@ func TestUserService_GetUserByID(t *testing.T) {
 }
 
 func TestUserService_ListUsers(t *testing.T) {
-	// Setup
+	// 配置
 	mockRepo := new(MockUserRepository)
 	logger, _ := zap.NewDevelopment()
-	service := NewUserService(mockRepo, nil, logger)
+	jwtConfig := jwt.Config{
+		Secret:     "test-secret",
+		Issuer:     "test",
+		ExpireTime: 24 * time.Hour,
+	}
+	service := NewUserService(mockRepo, nil, logger, jwtConfig)
 
 	ctx := context.Background()
 
-	// Test case 1: Successful list
+	// 测试用例 1: 成功获取列表
 	t.Run("Successful list", func(t *testing.T) {
 		expectedUsers := []*model.User{
 			{ID: 1, Username: "user1"},
@@ -216,7 +243,7 @@ func TestUserService_ListUsers(t *testing.T) {
 		mockRepo.AssertExpectations(t)
 	})
 
-	// Test case 2: Invalid page
+	// 测试用例 2: 无效页码 - 应默认为 1
 	t.Run("Invalid page - should default to 1", func(t *testing.T) {
 		expectedUsers := []*model.User{}
 		mockRepo.On("List", ctx, 0, 10).Return(expectedUsers, int64(0), nil).Once()
@@ -229,4 +256,3 @@ func TestUserService_ListUsers(t *testing.T) {
 		mockRepo.AssertExpectations(t)
 	})
 }
-

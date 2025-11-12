@@ -88,4 +88,3 @@ func InitTracer(cfg *Config, logger *zap.Logger) (func(context.Context) error, e
 
 	return cleanup, nil
 }
-

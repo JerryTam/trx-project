@@ -32,7 +32,7 @@ func main() {
 	fmt.Printf("  export ADMIN_TOKEN=\"%s\"\n", token)
 	fmt.Println("  curl -H \"Authorization: Bearer $ADMIN_TOKEN\" http://localhost:8081/api/v1/admin/users")
 	fmt.Println()
-	
+
 	// 生成普通管理员 Token（用户ID=2，角色=admin）
 	fmt.Println("==================== 普通管理员 Token ====================")
 	token2, _ := jwt.GenerateToken(2, "manager", "admin", config)
@@ -48,7 +48,7 @@ func main() {
 	fmt.Println("Token:")
 	fmt.Println(token2)
 	fmt.Println()
-	
+
 	// 生成编辑员 Token（用户ID=3，角色=editor）
 	fmt.Println("==================== 编辑员 Token ====================")
 	token3, _ := jwt.GenerateToken(3, "editor", "admin", config)
@@ -64,7 +64,7 @@ func main() {
 	fmt.Println("Token:")
 	fmt.Println(token3)
 	fmt.Println()
-	
+
 	fmt.Println("==================== 注意事项 ====================")
 	fmt.Println("1. 请先运行 scripts/init_rbac.sql 初始化 RBAC 数据")
 	fmt.Println("2. Token 中的 role 只用于基本认证，实际权限由数据库中的角色权限决定")
@@ -90,4 +90,3 @@ func main() {
 	fmt.Println("# 6. 查看用户权限")
 	fmt.Println("curl -H \"Authorization: Bearer $ADMIN_TOKEN\" http://localhost:8081/api/v1/admin/users/1/permissions")
 }
-

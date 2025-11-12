@@ -174,4 +174,3 @@ func (m *Migrator) Close() error {
 	}
 	return nil
 }
-

@@ -10,8 +10,8 @@ database:
     host: localhost
     port: 3306
     username: root
-    password: root123456
-    database: trx_dev
+    password: 123456
+    database: trx
     charset: utf8mb4
     max_idle_conns: 10
     max_open_conns: 100
