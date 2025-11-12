@@ -1,0 +1,178 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "构建 Frontend",
+            "type": "shell",
+            "command": "make",
+            "args": ["build-frontend"],
+            "group": {
+                "kind": "build",
+                "isDefault": false
+            },
+            "problemMatcher": ["$go"],
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared"
+            }
+        },
+        {
+            "label": "构建 Backend",
+            "type": "shell",
+            "command": "make",
+            "args": ["build-backend"],
+            "group": {
+                "kind": "build",
+                "isDefault": false
+            },
+            "problemMatcher": ["$go"],
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared"
+            }
+        },
+        {
+            "label": "构建所有服务",
+            "type": "shell",
+            "command": "make",
+            "args": ["build"],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "problemMatcher": ["$go"],
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared"
+            }
+        },
+        {
+            "label": "运行测试",
+            "type": "shell",
+            "command": "make",
+            "args": ["test"],
+            "group": {
+                "kind": "test",
+                "isDefault": true
+            },
+            "problemMatcher": ["$go"],
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared"
+            }
+        },
+        {
+            "label": "运行测试（带覆盖率）",
+            "type": "shell",
+            "command": "make",
+            "args": ["test-coverage"],
+            "group": "test",
+            "problemMatcher": ["$go"],
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared"
+            }
+        },
+        {
+            "label": "数据库迁移",
+            "type": "shell",
+            "command": "make",
+            "args": ["migrate-up"],
+            "problemMatcher": [],
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared"
+            }
+        },
+        {
+            "label": "启动 Frontend (Air 热重载)",
+            "type": "shell",
+            "command": "make",
+            "args": ["dev-frontend"],
+            "isBackground": true,
+            "problemMatcher": {
+                "owner": "go",
+                "pattern": {
+                    "regexp": "^(.*):(\\d+):(\\d+):\\s+(warning|error):\\s+(.*)$",
+                    "file": 1,
+                    "line": 2,
+                    "column": 3,
+                    "severity": 4,
+                    "message": 5
+                },
+                "background": {
+                    "activeOnStart": true,
+                    "beginsPattern": "^.*building.*$",
+                    "endsPattern": "^.*server starting.*$"
+                }
+            },
+            "presentation": {
+                "reveal": "always",
+                "panel": "dedicated",
+                "focus": false
+            }
+        },
+        {
+            "label": "启动 Backend (Air 热重载)",
+            "type": "shell",
+            "command": "make",
+            "args": ["dev-backend"],
+            "isBackground": true,
+            "problemMatcher": {
+                "owner": "go",
+                "pattern": {
+                    "regexp": "^(.*):(\\d+):(\\d+):\\s+(warning|error):\\s+(.*)$",
+                    "file": 1,
+                    "line": 2,
+                    "column": 3,
+                    "severity": 4,
+                    "message": 5
+                },
+                "background": {
+                    "activeOnStart": true,
+                    "beginsPattern": "^.*building.*$",
+                    "endsPattern": "^.*server starting.*$"
+                }
+            },
+            "presentation": {
+                "reveal": "always",
+                "panel": "dedicated",
+                "focus": false
+            }
+        },
+        {
+            "label": "清理构建产物",
+            "type": "shell",
+            "command": "make",
+            "args": ["clean"],
+            "problemMatcher": [],
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared"
+            }
+        },
+        {
+            "label": "代码检查 (golangci-lint)",
+            "type": "shell",
+            "command": "golangci-lint",
+            "args": ["run", "--config", ".golangci.yml"],
+            "problemMatcher": ["$go"],
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared"
+            }
+        },
+        {
+            "label": "生成 Swagger 文档",
+            "type": "shell",
+            "command": "make",
+            "args": ["swagger"],
+            "problemMatcher": [],
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared"
+            }
+        }
+    ]
+}
+

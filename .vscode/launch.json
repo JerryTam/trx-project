@@ -1,0 +1,112 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "调试 Frontend 服务",
+            "type": "go",
+            "request": "launch",
+            "mode": "debug",
+            "program": "${workspaceFolder}/cmd/frontend",
+            "env": {
+                "GO_ENV": "dev",
+                "AUTO_MIGRATE": "true"
+            },
+            "args": [],
+            "showLog": true,
+            "trace": "verbose"
+        },
+        {
+            "name": "调试 Backend 服务",
+            "type": "go",
+            "request": "launch",
+            "mode": "debug",
+            "program": "${workspaceFolder}/cmd/backend",
+            "env": {
+                "GO_ENV": "dev",
+                "AUTO_MIGRATE": "true"
+            },
+            "args": [],
+            "showLog": true,
+            "trace": "verbose"
+        },
+        {
+            "name": "调试 Frontend (Test环境)",
+            "type": "go",
+            "request": "launch",
+            "mode": "debug",
+            "program": "${workspaceFolder}/cmd/frontend",
+            "env": {
+                "GO_ENV": "test",
+                "AUTO_MIGRATE": "false"
+            },
+            "args": [],
+            "showLog": true,
+            "trace": "verbose"
+        },
+        {
+            "name": "调试 Backend (Test环境)",
+            "type": "go",
+            "request": "launch",
+            "mode": "debug",
+            "program": "${workspaceFolder}/cmd/backend",
+            "env": {
+                "GO_ENV": "test",
+                "AUTO_MIGRATE": "false"
+            },
+            "args": [],
+            "showLog": true,
+            "trace": "verbose"
+        },
+        {
+            "name": "调试当前文件",
+            "type": "go",
+            "request": "launch",
+            "mode": "debug",
+            "program": "${file}",
+            "showLog": true
+        },
+        {
+            "name": "调试当前测试文件",
+            "type": "go",
+            "request": "launch",
+            "mode": "test",
+            "program": "${workspaceFolder}",
+            "args": [
+                "-test.run",
+                "^${selectedText}$"
+            ],
+            "showLog": true
+        },
+        {
+            "name": "调试包内所有测试",
+            "type": "go",
+            "request": "launch",
+            "mode": "test",
+            "program": "${fileDirname}",
+            "showLog": true
+        },
+        {
+            "name": "附加到进程",
+            "type": "go",
+            "request": "attach",
+            "mode": "local",
+            "processId": "${command:pickProcess}"
+        }
+    ],
+    "compounds": [
+        {
+            "name": "调试 Frontend + Backend",
+            "configurations": [
+                "调试 Frontend 服务",
+                "调试 Backend 服务"
+            ],
+            "stopAll": true,
+            "presentation": {
+                "hidden": false,
+                "group": "全部服务",
+                "order": 1
+            }
+        }
+    ]
+}
+

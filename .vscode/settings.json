@@ -1,0 +1,69 @@
+{
+    // Go 语言配置
+    "go.useLanguageServer": true,
+    "go.toolsManagement.autoUpdate": true,
+    
+    // Delve 调试器配置
+    "go.delveConfig": {
+        "dlvLoadConfig": {
+            "followPointers": true,
+            "maxVariableRecurse": 3,
+            "maxStringLen": 400,
+            "maxArrayValues": 400,
+            "maxStructFields": -1
+        },
+        "apiVersion": 2,
+        "showGlobalVariables": false,
+        "showLog": true
+    },
+    
+    // 测试配置
+    "go.testFlags": ["-v", "-count=1"],
+    "go.testTimeout": "30s",
+    "go.coverOnSingleTest": true,
+    "go.coverOnSingleTestFile": true,
+    "go.coverageDecorator": {
+        "type": "gutter",
+        "coveredHighlightColor": "rgba(64,128,64,0.5)",
+        "uncoveredHighlightColor": "rgba(128,64,64,0.5)",
+        "coveredGutterStyle": "blockgreen",
+        "uncoveredGutterStyle": "blockred"
+    },
+    
+    // 代码格式化
+    "go.formatTool": "goimports",
+    "go.lintTool": "golangci-lint",
+    "go.lintFlags": ["--fast"],
+    
+    // 自动保存时格式化
+    "[go]": {
+        "editor.formatOnSave": true,
+        "editor.codeActionsOnSave": {
+            "source.organizeImports": "explicit"
+        }
+    },
+    
+    // 文件关联
+    "files.associations": {
+        "*.yaml": "yaml",
+        "*.toml": "toml",
+        ".air*.toml": "toml"
+    },
+    
+    // 排除文件
+    "files.exclude": {
+        "**/.git": true,
+        "**/bin": true,
+        "**/logs": true,
+        "**/.DS_Store": true
+    },
+    
+    // 文件监控排除
+    "files.watcherExclude": {
+        "**/.git/objects/**": true,
+        "**/bin/**": true,
+        "**/logs/**": true,
+        "**/node_modules/**": true
+    }
+}
+
