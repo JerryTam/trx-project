@@ -1,3 +1,4 @@
+basePath: /admin/api/v1
 definitions:
   trx-project_internal_model.Permission:
     properties:
@@ -82,8 +83,14 @@ definitions:
         description: 追踪ID（可选）
         type: string
     type: object
+host: localhost:8080
 info:
   contact: {}
+  description: |-
+    基于 Gin 框架的现代化 Go Web 服务 - 前台接口
+    面向最终用户的 API 服务，提供用户注册、登录、订单管理等功能
+  title: TRX Project - 后台 API
+  version: "1.0"
 paths:
   /admin/rbac/permissions:
     get:
@@ -737,4 +744,10 @@ paths:
       summary: 更新用户状态（后台）
       tags:
       - 用户管理
+securityDefinitions:
+  BearerAuth:
+    description: 输入 "Bearer " + JWT Token
+    in: header
+    name: Authorization
+    type: apiKey
 swagger: "2.0"

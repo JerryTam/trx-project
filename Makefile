@@ -84,6 +84,23 @@ migrate-goto: ## 迁移到指定版本 (用法: make migrate-goto VERSION=3)
 migrate-create: ## 创建新的迁移文件 (用法: make migrate-create NAME=add_user_phone)
 	@./scripts/migrate.sh create
 
+# ==================== Model 生成 ====================
+
+model-gen: ## 从数据库生成 GORM Model (用法: make model-gen DSN="user:pass@tcp(localhost:3306)/db?charset=utf8mb4&parseTime=True&loc=Local")
+	@if [ -z "$(DSN)" ]; then \
+		echo "❌ 错误: 需要提供 DSN 环境变量"; \
+		echo "用法: make model-gen DSN=\"user:pass@tcp(localhost:3306)/db?charset=utf8mb4&parseTime=True&loc=Local\""; \
+		exit 1; \
+	fi
+	@DSN="$(DSN)" ./scripts/generate_model_simple.sh
+
+model-gen-table: ## 生成指定表的 Model (用法: make model-gen-table DSN="..." TABLES="orders,users")
+	@if [ -z "$(DSN)" ]; then \
+		echo "❌ 错误: 需要提供 DSN 环境变量"; \
+		exit 1; \
+	fi
+	@DSN="$(DSN)" TABLES="$(TABLES)" ./scripts/generate_model_simple.sh
+
 migrate-drop: ## 删除所有表 (危险操作)
 	@./scripts/migrate.sh drop
 

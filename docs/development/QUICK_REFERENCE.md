@@ -25,6 +25,24 @@ make migrate-up
 
 ### 2️⃣ Model 层 (1分钟)
 
+**方式 1: 从数据库自动生成（⭐ 推荐）**
+
+```bash
+# 1. 先执行迁移创建表
+./scripts/migrate.sh up
+
+# 2. 生成 Model
+DSN="root:password@tcp(localhost:3306)/trx_db?charset=utf8mb4&parseTime=True&loc=Local" \
+TABLES="{table_name}" \
+./scripts/generate_model_simple.sh
+
+# 3. 复制并自定义
+cp internal/model/generated/model/{table_name}.gen.go internal/model/{feature}.go
+vim internal/model/{feature}.go  # 添加业务逻辑
+```
+
+**方式 2: 手动创建**
+
 ```bash
 # 创建文件
 vim internal/model/{feature}.go
@@ -106,6 +124,41 @@ func New{Feature}Service(
 }
 
 // 实现所有接口方法...
+```
+
+### 4️⃣ DTO 层 (可选但推荐) (1分钟)
+
+```bash
+# 创建 DTO 文件
+vim internal/dto/{feature}_dto.go
+```
+
+```go
+package dto
+
+import "trx-project/internal/model"
+
+// {Feature}DTO 响应 DTO
+type {Feature}DTO struct {
+	ID        uint   `json:"id"`
+	Name      string `json:"name"`
+	Status    int    `json:"status"`
+	StatusText string `json:"status_text"`
+	// 不包含 deleted_at 等数据库内部字段
+}
+
+// To{Feature}DTO 转换函数
+func To{Feature}DTO(item *model.{Feature}) *{Feature}DTO {
+	if item == nil {
+		return nil
+	}
+	return &{Feature}DTO{
+		ID:        item.ID,
+		Name:      item.Name,
+		Status:    int(item.Status),
+		StatusText: item.StatusText,
+	}
+}
 ```
 
 ### 5️⃣ Handler 层 (2分钟)

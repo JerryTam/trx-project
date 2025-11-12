@@ -5,7 +5,8 @@ import (
 	"time"
 	"trx-project/internal/model"
 	"trx-project/internal/repository"
-	"trx-project/pkg/metrics"
+
+	// "trx-project/pkg/metrics"
 
 	"go.uber.org/zap"
 	"gorm.io/gorm"
@@ -237,4 +238,3 @@ func (s *orderService) CompleteOrder(id uint, userID uint) error {
 
 	return nil
 }
-

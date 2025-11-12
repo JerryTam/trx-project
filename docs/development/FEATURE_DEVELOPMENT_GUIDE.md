@@ -292,6 +292,30 @@ mysql -u root -p trx_db -e "DESC orders;"
 
 **文件位置:** `internal/model/{feature}.go`
 
+**推荐方式：从数据库自动生成（⭐ 推荐）**
+
+执行数据库迁移后，可以使用工具自动生成 Model：
+
+```bash
+# 1. 执行迁移，创建表结构
+./scripts/migrate.sh up
+
+# 2. 从数据库生成 Model
+DSN="root:password@tcp(localhost:3306)/trx_db?charset=utf8mb4&parseTime=True&loc=Local" \
+TABLES="{table_name}" \
+./scripts/generate_model_simple.sh
+
+# 3. 复制生成的文件并自定义
+cp internal/model/generated/model/{table_name}.gen.go internal/model/{feature}.go
+vim internal/model/{feature}.go  # 添加业务逻辑
+```
+
+**详细说明:** 查看 [Model 自动生成指南](../../docs/tools/MODEL_GENERATION_GUIDE.md)
+
+**手动编写方式（备选）:**
+
+如果需要手动编写，使用以下模板：
+
 **代码模板:**
 
 ```go
@@ -696,7 +720,56 @@ func (s *{feature}Service) Change{Feature}Status(id uint, status model.{Feature}
 - ❌ HTTP 请求处理（应该在 Handler 层）
 - ❌ 直接操作数据库（应该通过 Repository）
 
-### 3.4 Handler 层 - HTTP 处理
+### 3.4 DTO 层 - 数据传输对象（可选但推荐）
+
+**文件位置:** `internal/dto/{feature}_dto.go`
+
+**为什么需要 DTO？**
+
+- ✅ 隐藏数据库内部字段（如 `deleted_at`）
+- ✅ 隐藏敏感信息（如密码）
+- ✅ 不同接口返回不同字段组合
+- ✅ 可以添加计算字段和格式化字段
+- ✅ 数据库变更不影响 API 响应
+
+**DTO 实现示例:**
+
+```go
+// internal/dto/order_dto.go
+package dto
+
+import "trx-project/internal/model"
+
+// OrderDTO 订单响应 DTO
+type OrderDTO struct {
+	ID          uint    `json:"id"`
+	OrderNo     string  `json:"order_no"`
+	ProductName string  `json:"product_name"`
+	TotalAmount float64 `json:"total_amount"`
+	Status      int     `json:"status"`
+	StatusText  string  `json:"status_text"`
+	// 不包含 deleted_at 等数据库内部字段
+}
+
+// ToOrderDTO 转换函数
+func ToOrderDTO(order *model.Order) *OrderDTO {
+	if order == nil {
+		return nil
+	}
+	return &OrderDTO{
+		ID:          order.ID,
+		OrderNo:     order.OrderNo,
+		ProductName: order.ProductName,
+		TotalAmount: order.TotalAmount,
+		Status:      int(order.Status),
+		StatusText:  order.StatusText,
+	}
+}
+```
+
+**详细说明:** 查看 [DTO 使用指南](DTO_GUIDE.md)
+
+### 3.5 Handler 层 - HTTP 处理
 
 **文件位置:** `internal/api/handler/frontendHandler/{feature}_handler.go` (前台) 或 `internal/api/handler/backendHandler/{feature}_handler.go` (后台)
 

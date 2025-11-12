@@ -1,3 +1,16 @@
+// @title TRX Project - 前台 API
+// @version 1.0
+// @description 基于 Gin 框架的现代化 Go Web 服务 - 前台接口
+// @description 面向最终用户的 API 服务，提供用户注册、登录、订单管理等功能
+
+// @host localhost:8080
+// @BasePath /api/v1
+
+// @securityDefinitions.apikey BearerAuth
+// @in header
+// @name Authorization
+// @description 输入 "Bearer " + JWT Token
+
 package main
 
 import (

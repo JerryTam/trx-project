@@ -57,7 +57,7 @@ rate_limit:
 
 # OpenTelemetry 链路追踪配置
 tracing:
-  enabled: true           # 开发环境启用追踪
+  enabled: false           # 开发环境启用追踪
   service_name: "trx-project"
   service_version: "1.0.0-dev"
   jaeger_endpoint: "localhost:4318"

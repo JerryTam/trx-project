@@ -254,6 +254,7 @@ make clean              # 清理构建文件
 ### 👨‍💻 开发指南
 - [功能开发规范](docs/development/FEATURE_DEVELOPMENT_GUIDE.md) - 新功能开发完整流程 ⭐⭐⭐
 - [快速参考卡片](docs/development/QUICK_REFERENCE.md) - 10分钟快速上手
+- [DTO 使用指南](docs/development/DTO_GUIDE.md) - API 响应数据结构设计 ⭐
 - [订单管理案例](docs/features/ORDER_MANAGEMENT_GUIDE.md) - 完整实现案例
 
 ### 📐 架构与设计

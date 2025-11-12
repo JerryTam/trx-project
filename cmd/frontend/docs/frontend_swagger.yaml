@@ -1,5 +1,25 @@
+basePath: /api/v1
 definitions:
-  internal_api_handler_frontendhandler.LoginRequest:
+  internal_api_handler_frontendHandler.CreateOrderRequest:
+    properties:
+      product_name:
+        example: iPhone 15 Pro
+        type: string
+      product_price:
+        example: 7999
+        type: number
+      quantity:
+        example: 1
+        type: integer
+      remark:
+        example: 请尽快发货
+        type: string
+    required:
+    - product_name
+    - product_price
+    - quantity
+    type: object
+  internal_api_handler_frontendHandler.LoginRequest:
     properties:
       password:
         description: 密码
@@ -13,7 +33,7 @@ definitions:
     - password
     - username
     type: object
-  internal_api_handler_frontendhandler.RegisterRequest:
+  internal_api_handler_frontendHandler.RegisterRequest:
     properties:
       email:
         description: 邮箱地址
@@ -35,6 +55,48 @@ definitions:
     - password
     - username
     type: object
+  trx-project_internal_dto.OrderDTO:
+    properties:
+      created_at:
+        description: 创建时间
+        type: string
+      id:
+        description: 订单ID
+        type: integer
+      order_no:
+        description: 订单号
+        type: string
+      paid_at:
+        description: 支付时间
+        type: string
+      product_name:
+        description: 商品名称
+        type: string
+      product_price:
+        description: 商品单价
+        type: number
+      quantity:
+        description: 购买数量
+        type: integer
+      remark:
+        description: 订单备注
+        type: string
+      status:
+        description: 订单状态
+        type: integer
+      status_text:
+        description: 状态文本
+        type: string
+      total_amount:
+        description: 订单总金额
+        type: number
+      updated_at:
+        description: 更新时间
+        type: string
+      user_id:
+        description: 用户ID
+        type: integer
+    type: object
   trx-project_internal_model.User:
     properties:
       created_at:
@@ -51,6 +113,20 @@ definitions:
       username:
         type: string
     type: object
+  trx-project_pkg_response.PageData:
+    properties:
+      list:
+        description: 数据列表
+      page:
+        description: 当前页
+        type: integer
+      page_size:
+        description: 每页数量
+        type: integer
+      total:
+        description: 总数
+        type: integer
+    type: object
   trx-project_pkg_response.Response:
     properties:
       code:
@@ -65,8 +141,14 @@ definitions:
         description: 追踪ID（可选）
         type: string
     type: object
+host: localhost:8080
 info:
   contact: {}
+  description: |-
+    基于 Gin 框架的现代化 Go Web 服务 - 前台接口
+    面向最终用户的 API 服务，提供用户注册、登录、订单管理等功能
+  title: TRX Project - 前台 API
+  version: "1.0"
 paths:
   /public/login:
     post:
@@ -79,7 +161,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/internal_api_handler_frontendhandler.LoginRequest'
+          $ref: '#/definitions/internal_api_handler_frontendHandler.LoginRequest'
       produces:
       - application/json
       responses:
@@ -123,7 +205,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/internal_api_handler_frontendhandler.RegisterRequest'
+          $ref: '#/definitions/internal_api_handler_frontendHandler.RegisterRequest'
       produces:
       - application/json
       responses:
@@ -152,6 +234,248 @@ paths:
       summary: 用户注册
       tags:
       - 公开接口
+  /user/orders:
+    get:
+      consumes:
+      - application/json
+      description: 获取当前用户的订单列表（分页）
+      parameters:
+      - default: 1
+        description: 页码
+        in: query
+        name: page
+        type: integer
+      - default: 10
+        description: 每页数量
+        in: query
+        name: page_size
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 获取成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/trx-project_pkg_response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/trx-project_pkg_response.PageData'
+              type: object
+        "401":
+          description: 未登录
+          schema:
+            $ref: '#/definitions/trx-project_pkg_response.Response'
+        "500":
+          description: 服务器内部错误
+          schema:
+            $ref: '#/definitions/trx-project_pkg_response.Response'
+      security:
+      - BearerAuth: []
+      summary: 获取用户订单列表
+      tags:
+      - 订单管理
+    post:
+      consumes:
+      - application/json
+      description: 用户创建新订单
+      parameters:
+      - description: 订单信息
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/internal_api_handler_frontendHandler.CreateOrderRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 创建成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/trx-project_pkg_response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/trx-project_internal_dto.OrderDTO'
+              type: object
+        "400":
+          description: 请求参数错误
+          schema:
+            $ref: '#/definitions/trx-project_pkg_response.Response'
+        "401":
+          description: 未登录
+          schema:
+            $ref: '#/definitions/trx-project_pkg_response.Response'
+        "500":
+          description: 服务器内部错误
+          schema:
+            $ref: '#/definitions/trx-project_pkg_response.Response'
+      security:
+      - BearerAuth: []
+      summary: 创建订单
+      tags:
+      - 订单管理
+  /user/orders/{id}:
+    get:
+      consumes:
+      - application/json
+      description: 根据订单ID获取订单详情
+      parameters:
+      - description: 订单ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 获取成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/trx-project_pkg_response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/trx-project_internal_dto.OrderDTO'
+              type: object
+        "400":
+          description: 请求参数错误
+          schema:
+            $ref: '#/definitions/trx-project_pkg_response.Response'
+        "401":
+          description: 未登录
+          schema:
+            $ref: '#/definitions/trx-project_pkg_response.Response'
+        "404":
+          description: 订单不存在
+          schema:
+            $ref: '#/definitions/trx-project_pkg_response.Response'
+        "500":
+          description: 服务器内部错误
+          schema:
+            $ref: '#/definitions/trx-project_pkg_response.Response'
+      security:
+      - BearerAuth: []
+      summary: 获取订单详情
+      tags:
+      - 订单管理
+  /user/orders/{id}/cancel:
+    post:
+      consumes:
+      - application/json
+      description: 用户取消订单
+      parameters:
+      - description: 订单ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 取消成功
+          schema:
+            $ref: '#/definitions/trx-project_pkg_response.Response'
+        "400":
+          description: 请求参数错误
+          schema:
+            $ref: '#/definitions/trx-project_pkg_response.Response'
+        "401":
+          description: 未登录
+          schema:
+            $ref: '#/definitions/trx-project_pkg_response.Response'
+        "404":
+          description: 订单不存在
+          schema:
+            $ref: '#/definitions/trx-project_pkg_response.Response'
+        "500":
+          description: 服务器内部错误
+          schema:
+            $ref: '#/definitions/trx-project_pkg_response.Response'
+      security:
+      - BearerAuth: []
+      summary: 取消订单
+      tags:
+      - 订单管理
+  /user/orders/{id}/complete:
+    post:
+      consumes:
+      - application/json
+      description: 用户确认收货，完成订单
+      parameters:
+      - description: 订单ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 完成成功
+          schema:
+            $ref: '#/definitions/trx-project_pkg_response.Response'
+        "400":
+          description: 请求参数错误
+          schema:
+            $ref: '#/definitions/trx-project_pkg_response.Response'
+        "401":
+          description: 未登录
+          schema:
+            $ref: '#/definitions/trx-project_pkg_response.Response'
+        "404":
+          description: 订单不存在
+          schema:
+            $ref: '#/definitions/trx-project_pkg_response.Response'
+        "500":
+          description: 服务器内部错误
+          schema:
+            $ref: '#/definitions/trx-project_pkg_response.Response'
+      security:
+      - BearerAuth: []
+      summary: 完成订单
+      tags:
+      - 订单管理
+  /user/orders/{id}/pay:
+    post:
+      consumes:
+      - application/json
+      description: 用户支付订单
+      parameters:
+      - description: 订单ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 支付成功
+          schema:
+            $ref: '#/definitions/trx-project_pkg_response.Response'
+        "400":
+          description: 请求参数错误
+          schema:
+            $ref: '#/definitions/trx-project_pkg_response.Response'
+        "401":
+          description: 未登录
+          schema:
+            $ref: '#/definitions/trx-project_pkg_response.Response'
+        "404":
+          description: 订单不存在
+          schema:
+            $ref: '#/definitions/trx-project_pkg_response.Response'
+        "500":
+          description: 服务器内部错误
+          schema:
+            $ref: '#/definitions/trx-project_pkg_response.Response'
+      security:
+      - BearerAuth: []
+      summary: 支付订单
+      tags:
+      - 订单管理
   /user/profile:
     get:
       consumes:
@@ -318,4 +642,10 @@ paths:
       summary: 获取用户信息（前台）
       tags:
       - 用户接口
+securityDefinitions:
+  BearerAuth:
+    description: 输入 "Bearer " + JWT Token
+    in: header
+    name: Authorization
+    type: apiKey
 swagger: "2.0"

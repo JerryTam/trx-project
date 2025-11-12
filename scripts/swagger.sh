@@ -89,7 +89,7 @@ generate_backend() {
         --parseDependency \
         --parseInternal \
         --instanceName backend \
-        --exclude internal/api/handler/frontendhandler
+        --exclude internal/api/handler/frontendHandler
     
     if [ $? -ne 0 ]; then
         print_error "后台文档生成失败！"

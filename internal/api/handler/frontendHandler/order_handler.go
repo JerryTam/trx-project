@@ -1,7 +1,10 @@
 package frontendHandler
 
 import (
+	"net/http"
 	"strconv"
+	"trx-project/internal/dto"     // DTO 层
+	_ "trx-project/internal/dto"   // 用于 Swagger 文档生成
 	_ "trx-project/internal/model" // 用于 Swagger 文档生成
 	"trx-project/internal/service"
 	"trx-project/pkg/response"
@@ -40,7 +43,7 @@ type CreateOrderRequest struct {
 // @Produce json
 // @Security BearerAuth
 // @Param body body CreateOrderRequest true "订单信息"
-// @Success 200 {object} response.Response{data=model.Order} "创建成功"
+// @Success 200 {object} response.Response{data=dto.OrderDTO} "创建成功"
 // @Failure 400 {object} response.Response "请求参数错误"
 // @Failure 401 {object} response.Response "未登录"
 // @Failure 500 {object} response.Response "服务器内部错误"
@@ -70,11 +73,13 @@ func (h *OrderHandler) CreateOrder(c *gin.Context) {
 	)
 
 	if err != nil {
-		response.Error(c, err.Error())
+		response.Error(c, http.StatusInternalServerError, response.CodeInternalError, err.Error())
 		return
 	}
 
-	response.Success(c, "订单创建成功", order)
+	// 转换为 DTO 返回
+	orderDTO := dto.ToOrderDTO(order)
+	response.SuccessWithMsg(c, "订单创建成功", orderDTO)
 }
 
 // GetOrder 获取订单详情
@@ -85,7 +90,7 @@ func (h *OrderHandler) CreateOrder(c *gin.Context) {
 // @Produce json
 // @Security BearerAuth
 // @Param id path int true "订单ID"
-// @Success 200 {object} response.Response{data=model.Order} "获取成功"
+// @Success 200 {object} response.Response{data=dto.OrderDTO} "获取成功"
 // @Failure 400 {object} response.Response "请求参数错误"
 // @Failure 401 {object} response.Response "未登录"
 // @Failure 404 {object} response.Response "订单不存在"
@@ -113,7 +118,9 @@ func (h *OrderHandler) GetOrder(c *gin.Context) {
 		return
 	}
 
-	response.Success(c, "获取成功", order)
+	// 转换为 DTO 返回
+	orderDTO := dto.ToOrderDTO(order)
+	response.SuccessWithMsg(c, "获取成功", orderDTO)
 }
 
 // GetOrders 获取用户订单列表
@@ -125,7 +132,7 @@ func (h *OrderHandler) GetOrder(c *gin.Context) {
 // @Security BearerAuth
 // @Param page query int false "页码" default(1)
 // @Param page_size query int false "每页数量" default(10)
-// @Success 200 {object} response.Response{data=response.PaginationData} "获取成功"
+// @Success 200 {object} response.Response{data=response.PageData} "获取成功"
 // @Failure 401 {object} response.Response "未登录"
 // @Failure 500 {object} response.Response "服务器内部错误"
 // @Router /user/orders [get]
@@ -144,12 +151,15 @@ func (h *OrderHandler) GetOrders(c *gin.Context) {
 	// 调用服务层获取订单列表
 	orders, total, err := h.orderService.GetUserOrders(userID.(uint), page, pageSize)
 	if err != nil {
-		response.Error(c, err.Error())
+		response.InternalError(c, err.Error())
 		return
 	}
 
+	// 转换为列表 DTO（简化版，只包含必要字段）
+	orderListDTOs := dto.ToOrderListDTOList(orders)
+
 	// 返回分页数据
-	response.Pagination(c, "获取成功", orders, total, page, pageSize)
+	response.PageSuccess(c, orderListDTOs, total, page, pageSize)
 }
 
 // PayOrder 支付订单
@@ -183,11 +193,11 @@ func (h *OrderHandler) PayOrder(c *gin.Context) {
 
 	// 调用服务层支付订单
 	if err := h.orderService.PayOrder(uint(orderID), userID.(uint)); err != nil {
-		response.Error(c, err.Error())
+		response.InternalError(c, err.Error())
 		return
 	}
 
-	response.Success(c, "支付成功", nil)
+	response.SuccessWithMsg(c, "支付成功", nil)
 }
 
 // CancelOrder 取消订单
@@ -221,11 +231,11 @@ func (h *OrderHandler) CancelOrder(c *gin.Context) {
 
 	// 调用服务层取消订单
 	if err := h.orderService.CancelOrder(uint(orderID), userID.(uint)); err != nil {
-		response.Error(c, err.Error())
+		response.InternalError(c, err.Error())
 		return
 	}
 
-	response.Success(c, "取消成功", nil)
+	response.SuccessWithMsg(c, "取消成功", nil)
 }
 
 // CompleteOrder 完成订单
@@ -259,10 +269,9 @@ func (h *OrderHandler) CompleteOrder(c *gin.Context) {
 
 	// 调用服务层完成订单
 	if err := h.orderService.CompleteOrder(uint(orderID), userID.(uint)); err != nil {
-		response.Error(c, err.Error())
+		response.InternalError(c, err.Error())
 		return
 	}
 
-	response.Success(c, "订单已完成", nil)
+	response.SuccessWithMsg(c, "订单已完成", nil)
 }
-

@@ -1190,17 +1190,25 @@ const docTemplatebackend = `{
                 }
             }
         }
+    },
+    "securityDefinitions": {
+        "BearerAuth": {
+            "description": "输入 \"Bearer \" + JWT Token",
+            "type": "apiKey",
+            "name": "Authorization",
+            "in": "header"
+        }
     }
 }`
 
 // SwaggerInfobackend holds exported Swagger Info so clients can modify it
 var SwaggerInfobackend = &swag.Spec{
-	Version:          "",
-	Host:             "",
-	BasePath:         "",
+	Version:          "1.0",
+	Host:             "localhost:8080",
+	BasePath:         "/admin/api/v1",
 	Schemes:          []string{},
-	Title:            "",
-	Description:      "",
+	Title:            "TRX Project - 后台 API",
+	Description:      "基于 Gin 框架的现代化 Go Web 服务 - 前台接口\n面向最终用户的 API 服务，提供用户注册、登录、订单管理等功能",
 	InfoInstanceName: "backend",
 	SwaggerTemplate:  docTemplatebackend,
 	LeftDelim:        "{{",
