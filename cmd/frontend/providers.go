@@ -46,12 +46,14 @@ func provideJWTConfig(cfg *config.Config) jwt.Config {
 
 func provideFrontendRouter(
 	userHandler *frontendHandler.UserHandler,
+	orderHandler *frontendHandler.OrderHandler,
 	redisClient *redis.Client,
 	logger *zap.Logger,
 	cfg *config.Config,
 ) *gin.Engine {
 	return router.SetupFrontend(
 		userHandler,
+		orderHandler,
 		cfg.JWT.Secret,
 		redisClient,
 		cfg,

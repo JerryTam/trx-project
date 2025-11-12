@@ -7,13 +7,14 @@
 package main
 
 import (
+	"github.com/gin-gonic/gin"
 	"trx-project/internal/api/handler/frontendHandler"
 	"trx-project/internal/repository"
 	"trx-project/internal/service"
 	"trx-project/pkg/config"
+)
 
-	"github.com/gin-gonic/gin"
-
+import (
 	_ "trx-project/cmd/frontend/docs"
 )
 
@@ -37,7 +38,10 @@ func initFrontendApp(cfg *config.Config) (*gin.Engine, func(), error) {
 	jwtConfig := provideJWTConfig(cfg)
 	userService := service.NewUserService(userRepository, client, logger, jwtConfig)
 	userHandler := frontendHandler.NewUserHandler(userService, logger)
-	engine := provideFrontendRouter(userHandler, client, logger, cfg)
+	orderRepository := repository.NewOrderRepository(db)
+	orderService := service.NewOrderService(orderRepository, logger)
+	orderHandler := frontendHandler.NewOrderHandler(orderService, logger)
+	engine := provideFrontendRouter(userHandler, orderHandler, client, logger, cfg)
 	return engine, func() {
 	}, nil
 }

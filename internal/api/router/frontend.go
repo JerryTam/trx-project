@@ -20,6 +20,7 @@ import (
 // SetupFrontend 设置前端路由器
 func SetupFrontend(
 	userHandler *frontendHandler.UserHandler,
+	orderHandler *frontendHandler.OrderHandler,
 	jwtSecret string,
 	redisClient *redis.Client,
 	cfg *config.Config,
@@ -101,8 +102,17 @@ func SetupFrontend(
 			user.Use(rateLimiter.UserRateLimit(cfg.RateLimit.UserRate))
 		}
 		{
+			// 个人信息管理
 			user.GET("/profile", userHandler.GetProfile)
 			user.PUT("/profile", userHandler.UpdateProfile)
+
+			// 订单管理
+			user.POST("/orders", orderHandler.CreateOrder)                // 创建订单
+			user.GET("/orders", orderHandler.GetOrders)                   // 获取订单列表
+			user.GET("/orders/:id", orderHandler.GetOrder)                // 获取订单详情
+			user.POST("/orders/:id/pay", orderHandler.PayOrder)           // 支付订单
+			user.POST("/orders/:id/cancel", orderHandler.CancelOrder)     // 取消订单
+			user.POST("/orders/:id/complete", orderHandler.CompleteOrder) // 完成订单
 		}
 
 		// 兼容旧接口（临时保留）

@@ -251,6 +251,11 @@ make clean              # 清理构建文件
 - [快速测试指南](docs/getting-started/QUICK_TEST_GUIDE.md) - API 测试示例
 - [启动指南](docs/getting-started/STARTUP_GUIDE.md) - 详细启动步骤
 
+### 👨‍💻 开发指南
+- [功能开发规范](docs/development/FEATURE_DEVELOPMENT_GUIDE.md) - 新功能开发完整流程 ⭐⭐⭐
+- [快速参考卡片](docs/development/QUICK_REFERENCE.md) - 10分钟快速上手
+- [订单管理案例](docs/features/ORDER_MANAGEMENT_GUIDE.md) - 完整实现案例
+
 ### 📐 架构与设计
 - [系统架构](docs/architecture/ARCHITECTURE.md) - 系统架构说明 ⭐
 - [项目结构](docs/architecture/PROJECT_STRUCTURE.md) - 目录结构详解

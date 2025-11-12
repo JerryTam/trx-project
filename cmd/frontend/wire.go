@@ -4,7 +4,7 @@
 package main
 
 import (
-	"trx-project/internal/api/handler/frontendhandler"
+	frontendHandler "trx-project/internal/api/handler/frontendHandler"
 	"trx-project/internal/repository"
 	"trx-project/internal/service"
 	"trx-project/pkg/config"
@@ -30,12 +30,15 @@ func initFrontendApp(cfg *config.Config) (*gin.Engine, func(), error) {
 
 		// Repository
 		repository.NewUserRepository,
+		repository.NewOrderRepository,
 
 		// Service
 		service.NewUserService,
+		service.NewOrderService,
 
 		// Handler
-		frontendhandler.NewUserHandler,
+		frontendHandler.NewUserHandler,
+		frontendHandler.NewOrderHandler,
 
 		// Frontend Router
 		provideFrontendRouter,

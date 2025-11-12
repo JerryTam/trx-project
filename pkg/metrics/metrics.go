@@ -18,6 +18,12 @@ type Metrics struct {
 	UserLogins        *prometheus.CounterVec
 	UserLoginFailures *prometheus.CounterVec
 
+	// 订单业务指标
+	OrderCreated   *prometheus.CounterVec
+	OrderPaid      *prometheus.CounterVec
+	OrderCancelled *prometheus.CounterVec
+	OrderCompleted *prometheus.CounterVec
+
 	// 数据库指标
 	DBConnections      prometheus.Gauge
 	DBQueriesTotal     *prometheus.CounterVec
