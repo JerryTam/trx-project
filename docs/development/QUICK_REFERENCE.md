@@ -7,12 +7,20 @@
 ### 1️⃣ 数据库迁移 (2分钟)
 
 ```bash
-# 创建迁移文件（按现有最大序号 +1）
+# 方式 1: 使用脚本自动创建迁移文件（⭐ 推荐）
+NAME=create_{table}_table ./scripts/migrate.sh create
+
+# 方式 2: 使用 Makefile
+make migrate-create NAME=create_{table}_table
+
+# 编辑生成的迁移文件
 vim migrations/000XXX_create_{table}_table.up.sql
 vim migrations/000XXX_create_{table}_table.down.sql
 
 # 执行迁移
-go run cmd/migrate/main.go -cmd up
+./scripts/migrate.sh up
+# 或
+make migrate-up
 ```
 
 ### 2️⃣ Model 层 (1分钟)

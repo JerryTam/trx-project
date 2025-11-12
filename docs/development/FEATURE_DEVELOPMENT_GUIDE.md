@@ -166,7 +166,32 @@ CREATE TABLE IF NOT EXISTS `orders` (
 
 ### 2.1 创建迁移文件
 
-**命名规范:**
+**推荐方式：使用脚本自动创建（⭐ 推荐）**
+
+```bash
+# 方式 1: 使用 migrate.sh 脚本
+NAME=create_orders_table ./scripts/migrate.sh create
+
+# 方式 2: 使用 Makefile
+make migrate-create NAME=create_orders_table
+```
+
+**脚本会自动：**
+- ✅ 计算下一个版本号（自动递增）
+- ✅ 创建 `up.sql` 和 `down.sql` 两个文件
+- ✅ 添加基础模板和注释
+- ✅ 使用正确的命名格式
+
+**输出示例:**
+```
+✅ 迁移文件创建成功:
+  📄 migrations/000007_create_orders_table.up.sql
+  📄 migrations/000007_create_orders_table.down.sql
+```
+
+**手动创建方式（不推荐）:**
+
+如果需要手动创建，命名规范如下：
 
 ```
 {序号}_{操作}_{表名}.{up|down}.sql
@@ -185,9 +210,14 @@ ls migrations/*.up.sql | wc -l
 
 ### 2.2 编写迁移文件
 
+**如果使用脚本创建，文件已经自动生成，只需要编辑 SQL 内容即可。**
+
 **UP 迁移文件模板 (`{number}_create_{table}_table.up.sql`):**
 
 ```sql
+-- create_{table}_table - 升级脚本
+-- 创建时间: 2025-01-12 17:00:00
+
 -- 创建{表名}表
 CREATE TABLE IF NOT EXISTS `{table_name}` (
   `id` bigint unsigned NOT NULL AUTO_INCREMENT COMMENT 'ID',
@@ -210,6 +240,9 @@ CREATE TABLE IF NOT EXISTS `{table_name}` (
 **DOWN 迁移文件模板 (`{number}_create_{table}_table.down.sql`):**
 
 ```sql
+-- create_{table}_table - 回滚脚本
+-- 创建时间: 2025-01-12 17:00:00
+
 -- 删除{表名}表
 DROP TABLE IF EXISTS `{table_name}`;
 ```
@@ -218,23 +251,33 @@ DROP TABLE IF EXISTS `{table_name}`;
 
 ```bash
 # 查看当前迁移版本
-go run cmd/migrate/main.go -cmd version
+./scripts/migrate.sh version
+# 或
+make migrate-version
 
 # 执行迁移（向上）
-go run cmd/migrate/main.go -cmd up
+./scripts/migrate.sh up
+# 或
+make migrate-up
 
 # 回滚迁移（向下）
-go run cmd/migrate/main.go -cmd down
+./scripts/migrate.sh down
+# 或
+make migrate-down
 
 # 强制设置版本（谨慎使用）
-go run cmd/migrate/main.go -cmd force -version 7
+VERSION=7 ./scripts/migrate.sh force
+# 或
+make migrate-force VERSION=7
 ```
 
 **验证迁移:**
 
 ```bash
 # 方式 1: 查看迁移版本
-go run cmd/migrate/main.go -cmd version
+./scripts/migrate.sh version
+# 或
+make migrate-version
 
 # 方式 2: 直接查看数据库
 mysql -u root -p trx_db -e "SHOW TABLES;"
@@ -1377,7 +1420,9 @@ git push origin feature/{feature}-management
 git pull origin main
 
 # 2. 执行数据库迁移
-go run cmd/migrate/main.go -cmd up
+./scripts/migrate.sh up
+# 或
+make migrate-up
 
 # 3. 编译服务
 go build -o bin/frontend cmd/frontend/*.go
@@ -1452,13 +1497,19 @@ docs/
 go run cmd/migrate/main.go -cmd version
 
 # 向上迁移
-go run cmd/migrate/main.go -cmd up
+./scripts/migrate.sh up
+# 或
+make migrate-up
 
 # 向下迁移
-go run cmd/migrate/main.go -cmd down
+./scripts/migrate.sh down
+# 或
+make migrate-down
 
 # 强制版本
-go run cmd/migrate/main.go -cmd force -version 7
+VERSION=7 ./scripts/migrate.sh force
+# 或
+make migrate-force VERSION=7
 ```
 
 **Wire 代码生成:**
