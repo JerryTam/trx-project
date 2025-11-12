@@ -15,7 +15,7 @@ import (
 	"go.uber.org/zap"
 )
 
-// SetupFrontend sets up the frontend router
+// SetupFrontend 设置前端路由器
 func SetupFrontend(
 	userHandler *handler.UserHandler,
 	jwtSecret string,
@@ -24,7 +24,7 @@ func SetupFrontend(
 	logger *zap.Logger,
 	mode string,
 ) *gin.Engine {
-	// Set gin mode
+	// 设置 gin 模式
 	gin.SetMode(mode)
 
 	r := gin.New()
@@ -32,7 +32,7 @@ func SetupFrontend(
 	// 创建 Prometheus 指标
 	m := metrics.NewMetrics("trx")
 
-	// Apply global middleware
+	// 应用全局中间件
 	// 顺序很重要：Recovery → OpenTelemetry → RequestID → Prometheus → Logger → CORS
 	r.Use(middleware.Recovery(logger))
 	
@@ -65,7 +65,7 @@ func SetupFrontend(
 		}
 	}
 
-	// Health check
+	// 健康检查
 	r.GET("/health", func(c *gin.Context) {
 		c.JSON(200, gin.H{
 			"status":  "ok",
@@ -79,7 +79,7 @@ func SetupFrontend(
 	// Swagger 文档
 	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
-	// API v1 routes
+	// API v1 路由
 	v1 := r.Group("/api/v1")
 	{
 		// 公开接口（无需认证）

@@ -8,7 +8,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// PrometheusMiddleware 返回一个 Prometheus 监控中间件
+// PrometheusMiddleware 返回 Prometheus 监控中间件
 func PrometheusMiddleware(m *metrics.Metrics, serviceName string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		start := time.Now()

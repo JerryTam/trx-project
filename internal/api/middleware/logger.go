@@ -7,7 +7,7 @@ import (
 	"go.uber.org/zap"
 )
 
-// Logger returns a gin middleware for logging requests
+// Logger 返回用于记录请求的 gin 中间件
 // 注意：应该在 RequestID 中间件之后使用，以便记录请求 ID
 func Logger(logger *zap.Logger) gin.HandlerFunc {
 	return func(c *gin.Context) {
@@ -18,10 +18,10 @@ func Logger(logger *zap.Logger) gin.HandlerFunc {
 		// 获取请求 ID
 		requestID := GetRequestID(c)
 
-		// Process request
+		// 处理请求
 		c.Next()
 
-		// Log after request is processed
+		// 请求处理完成后记录日志
 		latency := time.Since(start)
 		statusCode := c.Writer.Status()
 		method := c.Request.Method

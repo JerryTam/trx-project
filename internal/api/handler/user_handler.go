@@ -14,7 +14,7 @@ type UserHandler struct {
 	logger  *zap.Logger
 }
 
-// NewUserHandler creates a new user handler
+// NewUserHandler 创建新的用户处理器
 func NewUserHandler(service service.UserService, logger *zap.Logger) *UserHandler {
 	return &UserHandler{
 		service: service,
@@ -142,7 +142,7 @@ func (h *UserHandler) GetUser(c *gin.Context) {
 	}
 
 	// 前台用户只能获取自己的信息
-	// TODO: 从认证中间件获取当前用户ID进行验证
+	// TODO: 从认证中间件获取当前用户 ID 进行验证
 	// userID, _ := middleware.GetUserID(c)
 	// if uint(id) != userID {
 	//     response.Forbidden(c, "You can only access your own information")
@@ -176,7 +176,7 @@ func (h *UserHandler) GetUser(c *gin.Context) {
 // @Failure 500 {object} response.Response "服务器内部错误"
 // @Router /user/profile [get]
 func (h *UserHandler) GetProfile(c *gin.Context) {
-	// TODO: 从认证中间件获取当前用户ID
+	// TODO: 从认证中间件获取当前用户 ID
 	// userID, exists := middleware.GetUserID(c)
 	// if !exists {
 	//     response.Unauthorized(c, "User not authenticated")
@@ -219,7 +219,7 @@ func (h *UserHandler) GetProfile(c *gin.Context) {
 // @Failure 500 {object} response.Response "服务器内部错误"
 // @Router /user/profile [put]
 func (h *UserHandler) UpdateProfile(c *gin.Context) {
-	// TODO: 从认证中间件获取当前用户ID
+	// TODO: 从认证中间件获取当前用户 ID
 	// userID, exists := middleware.GetUserID(c)
 	// if !exists {
 	//     response.Unauthorized(c, "User not authenticated")
@@ -267,7 +267,7 @@ func (h *UserHandler) ListUsers(c *gin.Context) {
 	response.PageSuccess(c, users, total, page, pageSize)
 }
 
-// DeleteUser handles user deletion
+// DeleteUser 处理用户删除
 func (h *UserHandler) DeleteUser(c *gin.Context) {
 	idStr := c.Param("id")
 	id, err := strconv.ParseUint(idStr, 10, 32)

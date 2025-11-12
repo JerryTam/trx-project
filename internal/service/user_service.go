@@ -30,7 +30,7 @@ type userService struct {
 	jwtConfig jwt.Config
 }
 
-// NewUserService creates a new user service
+// NewUserService 创建新的用户服务
 func NewUserService(repo repository.UserRepository, redis *redis.Client, logger *zap.Logger, jwtConfig jwt.Config) UserService {
 	return &userService{
 		repo:      repo,
@@ -41,7 +41,7 @@ func NewUserService(repo repository.UserRepository, redis *redis.Client, logger 
 }
 
 func (s *userService) Register(ctx context.Context, username, email, password string) (*model.User, string, error) {
-	// Check if user already exists
+	// 检查用户是否已存在
 	if _, err := s.repo.GetByUsername(ctx, username); err == nil {
 		return nil, "", errors.New("username already exists")
 	} else if !errors.Is(err, gorm.ErrRecordNotFound) {
@@ -56,14 +56,14 @@ func (s *userService) Register(ctx context.Context, username, email, password st
 		return nil, "", err
 	}
 
-	// Hash password
+	// 加密密码
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
 		s.logger.Error("Failed to hash password", zap.Error(err))
 		return nil, "", err
 	}
 
-	// Create user
+	// 创建用户
 	user := &model.User{
 		Username: username,
 		Email:    email,
@@ -76,7 +76,7 @@ func (s *userService) Register(ctx context.Context, username, email, password st
 		return nil, "", err
 	}
 
-	// Generate JWT Token
+	// 生成 JWT Token
 	token, err := jwt.GenerateToken(user.ID, user.Username, "user", s.jwtConfig)
 	if err != nil {
 		s.logger.Error("Failed to generate token", zap.Error(err))
@@ -97,17 +97,17 @@ func (s *userService) Login(ctx context.Context, username, password string) (*mo
 		return nil, "", err
 	}
 
-	// Verify password
+	// 验证密码
 	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password)); err != nil {
 		return nil, "", errors.New("invalid username or password")
 	}
 
-	// Check if user is active
+	// 检查用户是否活跃
 	if user.Status != 1 {
 		return nil, "", errors.New("user account is inactive")
 	}
 
-	// Generate JWT Token
+	// 生成 JWT Token
 	token, err := jwt.GenerateToken(user.ID, user.Username, "user", s.jwtConfig)
 	if err != nil {
 		s.logger.Error("Failed to generate token", zap.Error(err))
@@ -119,9 +119,9 @@ func (s *userService) Login(ctx context.Context, username, password string) (*mo
 }
 
 func (s *userService) GetUserByID(ctx context.Context, id uint) (*model.User, error) {
-	// Try to get from cache first
+	// 首先尝试从缓存获取
 	cacheKey := fmt.Sprintf("user:%d", id)
-	// In production, implement proper cache logic here
+	// 生产环境中，在这里实现适当的缓存逻辑
 
 	user, err := s.repo.GetByID(ctx, id)
 	if err != nil {
@@ -132,8 +132,8 @@ func (s *userService) GetUserByID(ctx context.Context, id uint) (*model.User, er
 		return nil, err
 	}
 
-	// Cache the result
-	_ = cacheKey // TODO: Implement caching
+	// 缓存结果
+	_ = cacheKey // TODO: 实现缓存
 
 	return user, nil
 }
@@ -144,9 +144,9 @@ func (s *userService) UpdateUser(ctx context.Context, user *model.User) error {
 		return err
 	}
 
-	// Invalidate cache
+	// 使缓存失效
 	cacheKey := fmt.Sprintf("user:%d", user.ID)
-	_ = cacheKey // TODO: Implement cache invalidation
+	_ = cacheKey // TODO: 实现缓存失效
 
 	s.logger.Info("User updated successfully", zap.Uint("user_id", user.ID))
 	return nil
@@ -158,9 +158,9 @@ func (s *userService) DeleteUser(ctx context.Context, id uint) error {
 		return err
 	}
 
-	// Invalidate cache
+	// 使缓存失效
 	cacheKey := fmt.Sprintf("user:%d", id)
-	_ = cacheKey // TODO: Implement cache invalidation
+	_ = cacheKey // TODO: 实现缓存失效
 
 	s.logger.Info("User deleted successfully", zap.Uint("user_id", id))
 	return nil

@@ -190,7 +190,7 @@ func CheckPermission(permission string, logger *zap.Logger) gin.HandlerFunc {
 	}
 }
 
-// GetUserID 从上下文获取用户ID
+// GetUserID 从上下文获取用户 ID
 func GetUserID(c *gin.Context) (uint, bool) {
 	userID, exists := c.Get("user_id")
 	if !exists {
@@ -199,7 +199,7 @@ func GetUserID(c *gin.Context) (uint, bool) {
 	return userID.(uint), true
 }
 
-// GetAdminID 从上下文获取管理员ID
+// GetAdminID 从上下文获取管理员 ID
 func GetAdminID(c *gin.Context) (uint, bool) {
 	adminID, exists := c.Get("admin_id")
 	if !exists {

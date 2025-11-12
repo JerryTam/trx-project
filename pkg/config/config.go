@@ -143,13 +143,13 @@ func GetEnv() string {
 	return env
 }
 
-// GetDSN returns MySQL DSN string
+// GetDSN 返回 MySQL DSN 字符串
 func (m *MySQLConfig) GetDSN() string {
 	return fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?charset=utf8mb4&parseTime=True&loc=Local",
 		m.Username, m.Password, m.Host, m.Port, m.Database)
 }
 
-// GetAddress returns Redis address
+// GetAddress 返回 Redis 地址
 func (r *RedisConfig) GetAddress() string {
 	return fmt.Sprintf("%s:%d", r.Host, r.Port)
 }

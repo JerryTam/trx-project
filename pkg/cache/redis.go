@@ -9,7 +9,7 @@ import (
 	"go.uber.org/zap"
 )
 
-// InitRedis initializes Redis client
+// InitRedis 初始化 Redis 客户端
 func InitRedis(cfg *config.RedisConfig, logger *zap.Logger) (*redis.Client, error) {
 	client := redis.NewClient(&redis.Options{
 		Addr:         cfg.GetAddress(),
@@ -19,7 +19,7 @@ func InitRedis(cfg *config.RedisConfig, logger *zap.Logger) (*redis.Client, erro
 		MinIdleConns: cfg.MinIdleConns,
 	})
 
-	// Test connection
+	// 测试连接
 	ctx := context.Background()
 	if err := client.Ping(ctx).Err(); err != nil {
 		return nil, fmt.Errorf("failed to connect to redis: %w", err)
@@ -29,7 +29,7 @@ func InitRedis(cfg *config.RedisConfig, logger *zap.Logger) (*redis.Client, erro
 	return client, nil
 }
 
-// CloseRedis closes Redis client
+// CloseRedis 关闭 Redis 客户端
 func CloseRedis(client *redis.Client) error {
 	return client.Close()
 }

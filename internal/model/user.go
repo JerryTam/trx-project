@@ -14,7 +14,7 @@ type User struct {
 	Username  string         `gorm:"uniqueIndex;not null;size:50" json:"username"`
 	Email     string         `gorm:"uniqueIndex;not null;size:100" json:"email"`
 	Password  string         `gorm:"not null;size:255" json:"-"`
-	Status    int            `gorm:"default:1" json:"status"` // 1: active, 0: inactive
+	Status    int            `gorm:"default:1" json:"status"` // 1: 活跃, 0: 禁用
 }
 
 func (User) TableName() string {

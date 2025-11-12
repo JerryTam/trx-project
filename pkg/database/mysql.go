@@ -11,9 +11,9 @@ import (
 	"gorm.io/gorm/logger"
 )
 
-// InitMySQL initializes MySQL database connection
+// InitMySQL 初始化 MySQL 数据库连接
 func InitMySQL(cfg *config.MySQLConfig, zapLogger *zap.Logger) (*gorm.DB, error) {
-	// Configure GORM logger
+	// 配置 GORM 日志记录器
 	var gormLogger logger.Interface
 	switch cfg.LogLevel {
 	case "silent":
@@ -28,7 +28,7 @@ func InitMySQL(cfg *config.MySQLConfig, zapLogger *zap.Logger) (*gorm.DB, error)
 		gormLogger = logger.Default.LogMode(logger.Info)
 	}
 
-	// Open database connection
+	// 打开数据库连接
 	db, err := gorm.Open(mysql.Open(cfg.GetDSN()), &gorm.Config{
 		Logger: gormLogger,
 	})
@@ -36,18 +36,18 @@ func InitMySQL(cfg *config.MySQLConfig, zapLogger *zap.Logger) (*gorm.DB, error)
 		return nil, fmt.Errorf("failed to connect to database: %w", err)
 	}
 
-	// Get underlying SQL database
+	// 获取底层 SQL 数据库
 	sqlDB, err := db.DB()
 	if err != nil {
 		return nil, fmt.Errorf("failed to get database instance: %w", err)
 	}
 
-	// Set connection pool settings
+	// 设置连接池配置
 	sqlDB.SetMaxIdleConns(cfg.MaxIdleConns)
 	sqlDB.SetMaxOpenConns(cfg.MaxOpenConns)
 	sqlDB.SetConnMaxLifetime(time.Duration(cfg.MaxLifetime) * time.Second)
 
-	// Test connection
+	// 测试连接
 	if err := sqlDB.Ping(); err != nil {
 		return nil, fmt.Errorf("failed to ping database: %w", err)
 	}
@@ -56,7 +56,7 @@ func InitMySQL(cfg *config.MySQLConfig, zapLogger *zap.Logger) (*gorm.DB, error)
 	return db, nil
 }
 
-// CloseMySQL closes MySQL database connection
+// CloseMySQL 关闭 MySQL 数据库连接
 func CloseMySQL(db *gorm.DB) error {
 	sqlDB, err := db.DB()
 	if err != nil {

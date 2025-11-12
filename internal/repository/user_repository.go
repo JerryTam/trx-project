@@ -21,7 +21,7 @@ type userRepository struct {
 	db *gorm.DB
 }
 
-// NewUserRepository creates a new user repository
+// NewUserRepository 创建新的用户仓库
 func NewUserRepository(db *gorm.DB) UserRepository {
 	return &userRepository{db: db}
 }

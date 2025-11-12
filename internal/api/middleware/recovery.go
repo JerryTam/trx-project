@@ -7,7 +7,7 @@ import (
 	"go.uber.org/zap"
 )
 
-// Recovery returns a gin middleware for recovering from panics
+// Recovery 返回用于从 panic 恢复的 gin 中间件
 func Recovery(logger *zap.Logger) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		defer func() {

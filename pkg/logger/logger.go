@@ -9,15 +9,15 @@ import (
 
 var Logger *zap.Logger
 
-// InitLogger initializes zap logger
+// InitLogger 初始化 zap 日志记录器
 func InitLogger(cfg *config.LoggerConfig) error {
-	// Parse log level
+	// 解析日志级别
 	level := zapcore.InfoLevel
 	if err := level.UnmarshalText([]byte(cfg.Level)); err != nil {
 		return err
 	}
 
-	// Build zap config
+	// 构建 zap 配置
 	zapConfig := zap.Config{
 		Level:             zap.NewAtomicLevelAt(level),
 		Development:       false,
@@ -55,32 +55,32 @@ func getEncoderConfig() zapcore.EncoderConfig {
 	}
 }
 
-// Debug logs a debug message
+// Debug 记录调试级别的消息
 func Debug(msg string, fields ...zap.Field) {
 	Logger.Debug(msg, fields...)
 }
 
-// Info logs an info message
+// Info 记录信息级别的消息
 func Info(msg string, fields ...zap.Field) {
 	Logger.Info(msg, fields...)
 }
 
-// Warn logs a warning message
+// Warn 记录警告级别的消息
 func Warn(msg string, fields ...zap.Field) {
 	Logger.Warn(msg, fields...)
 }
 
-// Error logs an error message
+// Error 记录错误级别的消息
 func Error(msg string, fields ...zap.Field) {
 	Logger.Error(msg, fields...)
 }
 
-// Fatal logs a fatal message and exits
+// Fatal 记录致命级别的消息并退出
 func Fatal(msg string, fields ...zap.Field) {
 	Logger.Fatal(msg, fields...)
 }
 
-// Sync flushes any buffered log entries
+// Sync 刷新所有缓冲的日志条目
 func Sync() error {
 	return Logger.Sync()
 }

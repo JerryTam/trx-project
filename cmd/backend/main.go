@@ -17,19 +17,19 @@ import (
 )
 
 func main() {
-	// Load configuration
+	// 加载配置
 	cfg, err := config.Load("config/config.yaml")
 	if err != nil {
 		log.Fatalf("Failed to load config: %v", err)
 	}
 
-	// Initialize logger first for migration
+	// 优先初始化日志记录器用于迁移
 	logger, err := initLogger(cfg)
 	if err != nil {
 		log.Fatalf("Failed to initialize logger: %v", err)
 	}
 
-	// Initialize OpenTelemetry tracing
+	// 初始化 OpenTelemetry 链路追踪
 	tracingCleanup, err := tracing.InitTracer(&tracing.Config{
 		ServiceName:    cfg.Tracing.ServiceName + "-backend",
 		ServiceVersion: cfg.Tracing.ServiceVersion,
@@ -48,7 +48,7 @@ func main() {
 		}
 	}()
 
-	// Run database migrations if AUTO_MIGRATE is enabled
+	// 如果启用了 AUTO_MIGRATE，则运行数据库迁移
 	if os.Getenv("AUTO_MIGRATE") == "true" {
 		logger.Info("AUTO_MIGRATE enabled, running database migrations...")
 		if err := runMigrations(cfg, logger); err != nil {
@@ -57,15 +57,15 @@ func main() {
 		logger.Info("Database migrations completed successfully")
 	}
 
-	// Initialize app with Wire
+	// 使用 Wire 初始化应用
 	router, cleanup, err := initBackendApp(cfg)
 	if err != nil {
 		log.Fatalf("Failed to initialize backend app: %v", err)
 	}
 	defer cleanup()
 
-	// Backend uses different port
-	backendPort := cfg.Server.Port + 1 // Frontend 8080, Backend 8081
+	// 后端使用不同的端口
+	backendPort := cfg.Server.Port + 1 // 前端 8080，后端 8081
 	addr := fmt.Sprintf("%s:%d", cfg.Server.Host, backendPort)
 
 	srv := &http.Server{
@@ -76,7 +76,7 @@ func main() {
 		MaxHeaderBytes: 1 << 20,
 	}
 
-	// Start server in a goroutine
+	// 在 goroutine 中启动服务器
 	go func() {
 		logger.Sugar().Infof("Backend server starting on %s", addr)
 		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
@@ -84,14 +84,14 @@ func main() {
 		}
 	}()
 
-	// Wait for interrupt signal to gracefully shutdown
+	// 等待中断信号以优雅关闭
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	<-quit
 
 	logger.Sugar().Info("Shutting down backend server...")
 
-	// Graceful shutdown with timeout
+	// 带超时的优雅关闭
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
